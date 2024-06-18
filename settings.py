@@ -215,6 +215,16 @@ SESSION_CONFIGS = [
 
     ),
 
+    
+    dict(
+        name='end_of_experiment',
+        display_name="show up fee",
+        app_sequence=['end_of_experiment'],
+        num_demo_participants=1,
+
+    ),
+    
+
     # dict(
     #     name='data_to_dgp_new_design',
     #     display_name="data to DGP task new design",
