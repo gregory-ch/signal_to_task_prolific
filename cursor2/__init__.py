@@ -98,7 +98,7 @@ def creating_session(subsession):
         player.solution = C.SOLUTIONS.get(key, "No solution available")
 
 # PAGES
-class Calculator(Page):
+class calculator(Page):
     form_model = 'player'
     form_fields = ['result']
 
@@ -126,4 +126,4 @@ class Calculator(Page):
         pass
 
 
-page_sequence = [Calculator]
+page_sequence = [calculator]
