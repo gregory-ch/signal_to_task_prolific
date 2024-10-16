@@ -1,0 +1,250 @@
+{{ block title }}
+Classical math game, use all 4 numbers and + - × / to make 24!
+{{ endblock }}
+
+{{ block content }}
+    <div id="calculator">
+        <div class="number-grid">
+            {{ for number in initial_numbers }}
+                <div class="number" data-value="{{ number }}">{{ number }}</div>
+            {{ endfor }}
+        </div>
+        <div class="operations">
+            <div class="operation" data-op="+">+</div>
+            <div class="operation" data-op="-">-</div>
+            <div class="operation" data-op="*">×</div>
+            <div class="operation" data-op="/">÷</div>
+        </div>
+        <div class="controls">
+            <div id="undo">←</div>
+            <div id="redo">→</div>
+        </div>
+    </div>
+
+    <input type="hidden" name="result" id="id_result">
+    <button id="submit-button" style="display: none;">Submit Result</button>
+    <button type="button" id="show-solution-button">Show Solution</button>
+    <button type="button" id="show-difficulty-button">Show Difficulty</button>
+    <div id="solution-display" style="display: none;">{{ solution }}</div>
+    <div id="difficulty-display" style="display: none;">{{ is_hard }}</div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {{ block scripts }}
+    <script>
+        $(document).ready(function() {
+            let initialNumbers = js_vars.initial_numbers;
+            let selectedNumber = null;
+            let selectedOperation = null;
+            let selectedElement = null;
+            let history = [];
+            let historyIndex = -1;
+
+            // Initialize numbers from js_vars
+            $('.number-grid').empty();
+            initialNumbers.forEach(function(number) {
+                $('.number-grid').append(`<div class="number" data-value="${number}">${number}</div>`);
+            });
+
+            $('.number').click(function() {
+                if (selectedOperation === null) {
+                    $('.number').removeClass('selected');
+                    $(this).addClass('selected');
+                    selectedNumber = $(this).data('value');
+                    selectedElement = $(this);
+                } else {
+                    let firstNumber = selectedNumber;
+                    let secondNumber = $(this).data('value');
+                    let result = calculate(firstNumber, secondNumber, selectedOperation);
+                    
+                    $(this).text(result);
+                    $(this).data('value', result);
+                    $(this).addClass('result');
+                    
+                    // Change color to green if result is 24
+                    if (result === 24) {
+                        $(this).removeClass('result').addClass('result-24');
+                    }
+                    
+                    // Save result to hidden field
+                    $('#id_result').val(result);
+                    
+                    // Save operation to history
+                    history = history.slice(0, historyIndex + 1);
+                    history.push({
+                        firstNumber, 
+                        secondNumber, 
+                        operation: selectedOperation, 
+                        result,
+                        hiddenIndex: $('.number').index(selectedElement),
+                        resultIndex: $('.number').index(this)
+                    });
+                    historyIndex++;
+                    
+                    // Hide the first button (selected number)
+                    selectedElement.hide();
+                    
+                    // Reset selection
+                    $('.number, .operation').removeClass('selected');
+                    selectedNumber = null;
+                    selectedOperation = null;
+                    selectedElement = null;
+
+                    // Check if only one button is left
+                    if ($('.number:visible').length === 1) {
+                        $('#submit-button').show();
+                    } else {
+                        $('#submit-button').hide();
+                    }
+                }
+            });
+
+            $('.operation').click(function() {
+                if (selectedNumber === null) return;
+                $('.operation').removeClass('selected');
+                $(this).addClass('selected');
+                selectedOperation = $(this).data('op');
+            });
+
+            $('#undo').click(function() {
+                if (historyIndex > -1) {
+                    let state = history[historyIndex];
+                    $('.number').eq(state.hiddenIndex).show().text(state.firstNumber).data('value', state.firstNumber);
+                    $('.number').eq(state.resultIndex).removeClass('result result-24');
+                    historyIndex--;
+                    applyHistory();
+                    updateResult();
+                }
+            });
+
+            $('#redo').click(function() {
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    let state = history[historyIndex];
+                    $('.number').eq(state.hiddenIndex).hide();
+                    $('.number').eq(state.resultIndex).addClass(state.result === 24 ? 'result-24' : 'result');
+                    applyHistory();
+                    updateResult();
+                }
+            });
+
+            $('#submit-button').click(function() {
+                document.getElementById('form').submit();
+            });
+
+            $('#show-solution-button').click(function(e) {
+                e.preventDefault();  // Предотвращаем отправку формы
+                $('#solution-display').toggle();
+            });
+
+            $('#show-difficulty-button').click(function(e) {
+                e.preventDefault();  // Предотвращаем отправку формы
+                $('#difficulty-display').toggle();
+            });
+
+            function calculate(a, b, op) {
+                a = parseFloat(a);
+                b = parseFloat(b);
+                switch(op) {
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '*': return a * b;
+                    case '/': return a / b;
+                }
+            }
+
+            function applyHistory() {
+                $('.number').each(function(index) {
+                    if (historyIndex === -1) {
+                        $(this).text(initialNumbers[index]).data('value', initialNumbers[index]).show().removeClass('result result-24');
+                    } else {
+                        for (let i = 0; i <= historyIndex; i++) {
+                            let state = history[i];
+                            if (index === state.hiddenIndex) {
+                                $(this).hide();
+                            } else if (index === state.resultIndex) {
+                                $(this).text(state.result).data('value', state.result).show()
+                                    .removeClass('result result-24')
+                                    .addClass(state.result === 24 ? 'result-24' : 'result');
+                            }
+                        }
+                    }
+                });
+                // Check if only one button is left after applying history
+                if ($('.number:visible').length === 1) {
+                    $('#submit-button').show();
+                } else {
+                    $('#submit-button').hide();
+                }
+            }
+
+            function updateResult() {
+                if (historyIndex === -1) {
+                    $('#id_result').val('');
+                    $('#submit-button').hide();
+                } else {
+                    let state = history[historyIndex];
+                    $('#id_result').val(state.result);
+                    // Show submit button only if one number is left
+                    if ($('.number:visible').length === 1) {
+                        $('#submit-button').show();
+                    } else {
+                        $('#submit-button').hide();
+                    }
+                }
+            }
+        });
+    </script>
+    {{ endblock }}
+
+    <style>
+        #calculator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .number, .operation, #undo, #redo {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .operations, .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .selected {
+            background-color: #e0e0e0;
+        }
+        .result {
+            background-color: #ff6666;
+            color: white;
+        }
+        .result-24 {
+            background-color: #66ff66;
+            color: black;
+        }
+        #submit-button, #show-solution-button, #show-difficulty-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #solution-display, #difficulty-display {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+    </style>
+{{ endblock }}
