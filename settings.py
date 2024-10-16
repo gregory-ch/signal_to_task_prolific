@@ -216,13 +216,13 @@ SESSION_CONFIGS = [
     ),
 
     
-    dict(
-        name='end_of_experiment',
-        display_name="show up fee",
-        app_sequence=['end_of_experiment'],
-        num_demo_participants=1,
+    # dict(
+    #     name='end_of_experiment',
+    #     display_name="show up fee",
+    #     app_sequence=['end_of_experiment'],
+    #     num_demo_participants=1,
 
-    ),
+    # ),
     
 
     # dict(
@@ -238,6 +238,12 @@ SESSION_CONFIGS = [
         name='data_to_dgp_new_design_inverse',
         display_name="data to DGP Inverse",
         app_sequence=["quiz_inverse_rus", "data_to_dgp_new", "survey_eng"],
+        num_demo_participants=1,
+    ),
+        dict(
+        name='cursor2',
+        display_name="cursor2",
+        app_sequence=["cursor2"],
         num_demo_participants=1,
     ),
 
