@@ -106,24 +106,29 @@ class calculator(Page):
     def vars_for_template(player: Player):
         sample = C.HARD_SAMPLE if player.is_hard else C.SIMPLE_SAMPLE
         initial_numbers = sample[player.sample_index]
-        return {
-            'initial_numbers': initial_numbers,
-            'solution': player.solution,
-            'is_hard': 'Hard' if player.is_hard else 'Simple'
-        }
+        return dict(
+            initial_numbers=initial_numbers,
+            solution=player.solution,
+            is_hard='Hard' if player.is_hard else 'Simple'
+        )
 
     @staticmethod
     def js_vars(player: Player):
         sample = C.HARD_SAMPLE if player.is_hard else C.SIMPLE_SAMPLE
         initial_numbers = sample[player.sample_index]
-        return {
-            'initial_numbers': initial_numbers,
-        }
+        return dict(
+            initial_numbers=initial_numbers,
+        )
 
     @staticmethod
     def live_method(player: Player, data):
         # Этот метод можно использовать для обработки действий в реальном времени
         pass
 
+    @staticmethod
+    def before_next_page(player: Player, timeout_happened):
+        # Убедимся, что результат сохранен
+        if player.result is None:
+            player.result = 0  # или любое другое значение по умолчанию
 
 page_sequence = [calculator]
