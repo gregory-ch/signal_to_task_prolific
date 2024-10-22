@@ -1,9 +1,11 @@
 {{ block title }}
-Classical math game, use all 4 numbers and + - × / to make 24!
+<div style="text-align: center;">
+    Classical math game,<br>use all 4 numbers and + - × / to make 24!
+</div>
 {{ endblock }}
 
 {{ block content }}
-    <div id="calculator">
+    <div id="calculator" style="margin-bottom: 100px;">
         <div class="number-grid">
             {{ for number in initial_numbers }}
                 <div class="number" data-value="{{ number }}">{{ number }}</div>
@@ -21,12 +23,23 @@ Classical math game, use all 4 numbers and + - × / to make 24!
         </div>
     </div>
 
-    <input type="hidden" name="result" id="id_result">
-    <button id="submit-button" style="display: none;">Submit Result</button>
-    <button type="button" id="show-solution-button">Show Solution</button>
-    <button type="button" id="show-difficulty-button">Show Difficulty</button>
-    <div id="solution-display" style="display: none;">{{ solution }}</div>
-    <div id="difficulty-display" style="display: none;">{{ is_hard }}</div>
+    <div id="hidden-form-container" style="display: none;">
+        <form id="game-form" method="post">
+            {{ formfields }}
+            <input type="hidden" name="result" id="id_result">
+        </form>
+    </div>
+    
+    <div id="result-display" style="text-align: center;">Result: <span id="result-value"></span></div>
+    
+    <div class="button-container">
+        <button id="submit-button">Submit Result</button>
+        <button type="button" id="show-solution-button">Show Solution</button>
+        <button type="button" id="show-difficulty-button">Show Difficulty</button>
+    </div>
+    
+    <div id="solution-display" style="display: none;">Solution: {{ solution }}</div>
+    <div id="difficulty-display" style="display: none;">Difficulty: {{ is_hard }}</div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {{ block scripts }}
@@ -46,6 +59,11 @@ Classical math game, use all 4 numbers and + - × / to make 24!
             });
 
             $('.number').click(function() {
+                if ($(this).hasClass('selected') || $(this).is(':hidden')) {
+                    // Если кнопка уже выбрана или скрыта, ничего не делаем
+                    return;
+                }
+
                 if (selectedOperation === null) {
                     $('.number').removeClass('selected');
                     $(this).addClass('selected');
@@ -100,9 +118,15 @@ Classical math game, use all 4 numbers and + - × / to make 24!
 
             $('.operation').click(function() {
                 if (selectedNumber === null) return;
-                $('.operation').removeClass('selected');
-                $(this).addClass('selected');
-                selectedOperation = $(this).data('op');
+                if ($(this).hasClass('selected')) {
+                    // Если операция уже выбрана, снимаем выбор
+                    $(this).removeClass('selected');
+                    selectedOperation = null;
+                } else {
+                    $('.operation').removeClass('selected');
+                    $(this).addClass('selected');
+                    selectedOperation = $(this).data('op');
+                }
             });
 
             $('#undo').click(function() {
@@ -112,7 +136,6 @@ Classical math game, use all 4 numbers and + - × / to make 24!
                     $('.number').eq(state.resultIndex).removeClass('result result-24');
                     historyIndex--;
                     applyHistory();
-                    updateResult();
                 }
             });
 
@@ -123,21 +146,20 @@ Classical math game, use all 4 numbers and + - × / to make 24!
                     $('.number').eq(state.hiddenIndex).hide();
                     $('.number').eq(state.resultIndex).addClass(state.result === 24 ? 'result-24' : 'result');
                     applyHistory();
-                    updateResult();
                 }
             });
 
             $('#submit-button').click(function() {
-                document.getElementById('form').submit();
+                $('#game-form').submit();
             });
 
             $('#show-solution-button').click(function(e) {
-                e.preventDefault();  // Предотвращаем отправку формы
+                e.preventDefault();
                 $('#solution-display').toggle();
             });
 
             $('#show-difficulty-button').click(function(e) {
-                e.preventDefault();  // Предотвращаем отправку формы
+                e.preventDefault();
                 $('#difficulty-display').toggle();
             });
 
@@ -171,25 +193,11 @@ Classical math game, use all 4 numbers and + - × / to make 24!
                 });
                 // Check if only one button is left after applying history
                 if ($('.number:visible').length === 1) {
+                    $('#id_result').val($('.number:visible').first().data('value'));
                     $('#submit-button').show();
                 } else {
-                    $('#submit-button').hide();
-                }
-            }
-
-            function updateResult() {
-                if (historyIndex === -1) {
                     $('#id_result').val('');
                     $('#submit-button').hide();
-                } else {
-                    let state = history[historyIndex];
-                    $('#id_result').val(state.result);
-                    // Show submit button only if one number is left
-                    if ($('.number:visible').length === 1) {
-                        $('#submit-button').show();
-                    } else {
-                        $('#submit-button').hide();
-                    }
                 }
             }
         });
@@ -216,6 +224,7 @@ Classical math game, use all 4 numbers and + - × / to make 24!
             align-items: center;
             border: 1px solid #ccc;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
         .operations, .controls {
             display: flex;
@@ -223,6 +232,8 @@ Classical math game, use all 4 numbers and + - × / to make 24!
         }
         .selected {
             background-color: #e0e0e0;
+            border: 2px solid black;
+            font-weight: bold;
         }
         .result {
             background-color: #ff6666;
@@ -232,10 +243,16 @@ Classical math game, use all 4 numbers and + - × / to make 24!
             background-color: #66ff66;
             color: black;
         }
-        #submit-button, #show-solution-button, #show-difficulty-button {
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
             margin-top: 20px;
+            padding-bottom: 20px;
+        }
+        #submit-button, #show-solution-button, #show-difficulty-button {
             padding: 10px 20px;
-            background-color: #4CAF50;
+            background-color: #808080;
             color: white;
             border: none;
             cursor: pointer;
@@ -245,6 +262,17 @@ Classical math game, use all 4 numbers and + - × / to make 24!
             padding: 10px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
+            font-weight: bold;
+        }
+        #result-display {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #submit-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
     </style>
 {{ endblock }}
