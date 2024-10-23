@@ -4,13 +4,35 @@
 {{ block styles }}
     <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
     <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+    <style>
+        .results-container {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+    </style>
 {{ endblock }}
 
 {{ block content }}
     <div id="jspsych-finished-target"></div>
+    <div class="results-container">
+        <div class="result-item">
+            <strong>Total Score:</strong> {{ player.score }}
+        </div>
+        <div class="result-item">
+            <strong>Total Trials:</strong> {{ player.total_trials }}
+        </div>
+        <div class="result-item">
+            <strong>Incorrect Key Presses:</strong> {{ player.incorrect_key_presses }}
+        </div>
+    </div>
     {{ formfields }}
-    <div id="form" style="display:none;">
-        {{ next_button }}
+    <div id="form">
+        <!-- {{ next_button }} -->
     </div>
 {{ endblock }}
 
@@ -27,7 +49,7 @@
         var jsPsych = initJsPsych({
             display_element: 'jspsych-finished-target',
             on_finish: function() {
-                document.getElementById('form').submit();
+                // Форма теперь видима сразу, так что нет необходимости ее показывать
             }
         });
 
@@ -35,7 +57,7 @@
             {
                 type: jsPsychInstructions,
                 pages: [
-                    `<p>Great job! You've finished the task.</p><p>Press "Next" to end the experiment.</p>`
+                    `<p>Great job! You've finished the task.</p><p>Below you can see your results.</p><p>Press "Next" to end the experiment.</p>`
                 ],
                 show_clickable_nav: true,
                 button_label_previous: "Prev",

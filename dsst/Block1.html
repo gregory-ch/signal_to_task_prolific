@@ -4,9 +4,21 @@
 {{ block styles }}
     <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
     <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+    <style>
+        #timer {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
 {{ endblock }}
 
 {{ block content }}
+    <div id="timer">Time left: <span id="time-left"></span></div>
     <div id="jspsych-block1-target"></div>
     {{ formfields }}
     <div id="form" style="display:none;">
@@ -24,29 +36,36 @@
     <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
     <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
     <script>
+        var totalIncorrectKeyPresses = 0;
+        var totalTrials = 0;
+        var totalScore = 0;
+
         var jsPsych = initJsPsych({
             display_element: 'jspsych-block1-target',
             on_finish: function() {
                 console.log('Block 1 finished');
-                var blockData = jsPsych.data.get().json();
-                var trials = jsPsych.data.get().count();
-                var score = jsPsych.data.get().filter({correct: true}).count();
-                console.log('Sending data:', {
-                    'action': 'save_data',
-                    'data': blockData,
-                    'trials': trials,
-                    'score': score
-                });
-                liveSend({
-                    'action': 'save_data',
-                    'data': blockData,
-                    'trials': trials,
-                    'score': score
-                });
-                document.getElementById('form').submit();
+                // Вместо автоматической отправки формы, показываем кнопку "Продолжить"
+                document.getElementById('form').style.display = 'block';
             },
             on_data_update: function(data) {
                 console.log('Trial data:', data);
+                if (data.trial_type === 'dsst') {
+                    totalTrials++;
+                    if (data.correct) {
+                        totalScore++;
+                    }
+                    if (data.incorrect_key_presses) {
+                        totalIncorrectKeyPresses += data.incorrect_key_presses;
+                    }
+                    
+                    liveSend({
+                        'action': 'save_data',
+                        'data': JSON.stringify(data),
+                        'trials': totalTrials,
+                        'score': totalScore,
+                        'incorrect_key_presses': totalIncorrectKeyPresses
+                    });
+                }
             }
         });
 
@@ -62,20 +81,7 @@
                 var timeline = window.createBlockTimeline(img_files, 1);
                 console.log('Timeline for Block 1:', timeline);
 
-                var start_time = Date.now();
-
-                jsPsych.run(timeline).then(function() {
-                    if (Date.now() - start_time >= block_duration) {
-                        console.log('Maximum time reached, ending block');
-                        jsPsych.endExperiment('Block 1 completed');
-                    }
-                });
-
-                // Принудительно завершить блок через заданное время
-                setTimeout(function() {
-                    console.log('Forced end of block after ' + block_duration + ' milliseconds');
-                    jsPsych.endExperiment('Block 1 completed');
-                }, block_duration);
+                jsPsych.run(timeline);
 
             } catch (error) {
                 console.error('Error in initializeExperiment:', error);
@@ -84,5 +90,17 @@
 
         // Ждем, пока все скрипты загрузятся
         window.addEventListener('load', initializeExperiment);
+
+        // Используем таймер oTree
+        $(function () {
+            $('.otree-timer__time-left').on('update.countdown', function (event) {
+                if (event.offset.totalSeconds === 0) {
+                    jsPsych.endExperiment('Time is up');
+                    // Показываем кнопку "Продолжить" после окончания времени
+                    document.getElementById('form').style.display = 'block';
+                }
+                $('#time-left').text(event.strftime('%M:%S'));
+            });
+        });
     </script>
 {{ endblock }}

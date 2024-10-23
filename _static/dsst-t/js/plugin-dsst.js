@@ -112,6 +112,9 @@ var jsPsychDsst = (function (jspsych) {
         key: null,
       };
 
+      // Инициализируем счетчик неправильных нажатий для этого trial
+      trial.incorrect_key_presses = 0;
+
       // function to handle responses by the subject
       var after_response = function(info) {
         // Kill all setTimeout handlers.
@@ -149,12 +152,10 @@ var jsPsychDsst = (function (jspsych) {
           key: response.key,
           rt: response.rt,
           correct: correct,
+          incorrect_key_presses: trial.incorrect_key_presses,
           screen_resolution: screen_resolution,
           minimum_resolution: minimum_resolution
         };
-
-        // clear the display
-        display_element.innerHTML = '';
 
         // move on to the next trial
         jsPsych.finishTrial(trial_data);
@@ -164,10 +165,17 @@ var jsPsychDsst = (function (jspsych) {
       var keyboardListener = '';
       setTimeout(function() {
         keyboardListener = jsPsych.pluginAPI.getKeyboardResponse({
-          callback_function: after_response,
-          valid_responses: [trial.valid_responses],
+          callback_function: function(info) {
+            if (info.key === trial.valid_responses) {
+              after_response(info);
+            } else {
+              trial.incorrect_key_presses++; // Увеличиваем счетчик при неверном нажатии
+              console.log('Incorrect key press. Total incorrect for this trial:', trial.incorrect_key_presses);
+            }
+          },
+          valid_responses: "ALL_KEYS",
           rt_method: 'performance',
-          persist: false,
+          persist: true,
           allow_held_key: false
         });
       }, trial.iti_duration);
