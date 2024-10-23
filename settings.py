@@ -233,6 +233,13 @@ SESSION_CONFIGS = [
     #                   "data_to_dgp_new", "survey_eng"],
     #     num_demo_participants=1,
     # ),
+    
+     dict(
+        name='dsst',
+        display_name="dsst cursor",
+        app_sequence=["dsst"],
+        num_demo_participants=1,
+    ),
 
     dict(
         name='data_to_dgp_new_design_inverse',
