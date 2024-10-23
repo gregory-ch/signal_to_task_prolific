@@ -1,0 +1,112 @@
+{{ extends "otree/Page.html" }}
+{{ block title }}Digit Symbol Substitution Task{{ endblock }}
+
+{{ block styles }}
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+{{ endblock }}
+
+{{ block content }}
+    <div id="jspsych-target"></div>
+{{ endblock }}
+
+{{ block scripts }}
+    <!-- Load libraries -->
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+
+    <!-- Initialize jsPsych -->
+    <script src="{{ static 'dsst-t/js/init-jspsych.js' }}"></script>
+
+    <!-- Load jsPsych plug-ins -->
+    <script src="{{ static 'dsst-t/js/plugin-dsst.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst-instructions.js' }}"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
+
+    <!-- Load experiment -->
+    <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
+
+    <script>
+    function initializeExperiment() {
+        console.log('Initializing experiment');
+
+        // Получаем пути к изображениям из js_vars
+        var img_files = js_vars.img_files;
+        console.log('Image URLs:', img_files);
+
+        // Проверяем доступность изображений
+        img_files.forEach((img, index) => {
+            fetch(img)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    console.log(`Image ${index} is accessible:`, img);
+                })
+                .catch(e => {
+                    console.error(`Image ${index} is not accessible:`, img, e);
+                });
+        });
+
+        console.log('Attempting to preload images:', img_files);
+        img_files.forEach((img, index) => {
+            let testImg = new Image();
+            testImg.onload = function() {
+                console.log(`Image ${index} loaded successfully:`, img);
+            };
+            testImg.onerror = function() {
+                console.error(`Failed to load image ${index}:`, img);
+            };
+            testImg.src = img;
+        });
+
+        // Define image preloading.
+        var PRELOAD = {
+            type: jsPsychPreload,
+            images: img_files,
+            message: 'Loading images. This may take a moment depending on your internet connection.',
+            error_message: '<p>The experiment failed to load. Please try restarting your browser.</p><p>If this error persists after 2-3 tries, please contact the experimenter.</p>',
+            continue_after_error: false,
+            show_progress_bar: true,
+            max_load_time: 60000  // 60 секунд вместо 30
+        }
+
+        // Define experiment fullscreen.
+        var FULLSCREEN = {
+            type: jsPsychFullscreen,
+            fullscreen_mode: true
+        }
+
+        // Initialize timeline.
+        var timeline = [];
+        timeline = timeline.concat(PRELOAD);
+        timeline = timeline.concat(INSTRUCTIONS);
+        timeline = timeline.concat(DSST_01);
+        timeline = timeline.concat(PAUSE_01);
+        timeline = timeline.concat(DSST_02);
+        timeline = timeline.concat(PAUSE_02);
+        timeline = timeline.concat(DSST_03);
+        timeline = timeline.concat(FINISHED);
+
+        // Проверяем, что jsPsych инициализирован
+        if (typeof window.jsPsych !== 'undefined') {
+            console.log('jsPsych is initialized');
+        } else {
+            console.error('Error: jsPsych is not initialized');
+            return;
+        }
+
+        // Запуск эксперимента
+        try {
+            window.jsPsych.run(timeline);
+            console.log('jsPsych.run() called');
+        } catch (error) {
+            console.error('Error running jsPsych:', error);
+        }
+    }
+
+    // Ждем, пока все скрипты загрузятся
+    window.addEventListener('load', initializeExperiment);
+    </script>
+{{ endblock }}

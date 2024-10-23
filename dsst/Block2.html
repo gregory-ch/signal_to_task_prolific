@@ -1,0 +1,76 @@
+{{ extends "otree/Page.html" }}
+{{ block title }}Block 2{{ endblock }}
+
+{{ block styles }}
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+{{ endblock }}
+
+{{ block content }}
+    <div id="jspsych-block2-target"></div>
+    {{ formfields }}
+    <div id="form" style="display:none;">
+        {{ next_button }}
+    </div>
+{{ endblock }}
+
+{{ block scripts }}
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="{{ static 'dsst-t/js/init-jspsych.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst-instructions.js' }}"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
+    <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
+    <script>
+        var jsPsych = initJsPsych({
+            display_element: 'jspsych-block2-target',
+            on_finish: function() {
+                console.log('Block 2 finished');
+                document.getElementById('form').submit();
+            },
+            on_trial_start: function() {
+                console.log('Trial started');
+            },
+            on_trial_finish: function() {
+                console.log('Trial finished');
+            }
+        });
+
+        function initializeExperiment() {
+            console.log('Initializing Block 2');
+
+            var img_files = js_vars.img_files;
+            console.log('Image URLs:', img_files);
+
+            try {
+                var timeline = window.createBlockTimeline(img_files, 2);
+                console.log('Timeline for Block 2:', timeline);
+
+                var start_time = Date.now();
+                var max_duration = js_vars.block_duration; // 90 секунд
+
+                jsPsych.run(timeline).then(function() {
+                    if (Date.now() - start_time >= max_duration) {
+                        console.log('Maximum time reached, ending block');
+                        document.getElementById('form').submit();
+                    }
+                });
+
+                // Принудительно завершить блок через 90 секунд
+                setTimeout(function() {
+                    console.log('Forced end of block after 90 seconds');
+                    jsPsych.endExperiment('Block 2 completed');
+                    document.getElementById('form').submit();
+                }, max_duration);
+
+            } catch (error) {
+                console.error('Error in initializeExperiment:', error);
+            }
+        }
+
+        // Ждем, пока все скрипты загрузятся
+        window.addEventListener('load', initializeExperiment);
+    </script>
+{{ endblock }}

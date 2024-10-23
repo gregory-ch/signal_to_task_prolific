@@ -1,0 +1,48 @@
+{{ extends "otree/Page.html" }}
+{{ block title }}Finished{{ endblock }}
+
+{{ block styles }}
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+{{ endblock }}
+
+{{ block content }}
+    <div id="jspsych-finished-target"></div>
+    {{ formfields }}
+    <div id="form" style="display:none;">
+        {{ next_button }}
+    </div>
+{{ endblock }}
+
+{{ block scripts }}
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="{{ static 'dsst-t/js/init-jspsych.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst-instructions.js' }}"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
+    <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
+    <script>
+        var jsPsych = initJsPsych({
+            display_element: 'jspsych-finished-target',
+            on_finish: function() {
+                document.getElementById('form').submit();
+            }
+        });
+
+        var timeline = [
+            {
+                type: jsPsychInstructions,
+                pages: [
+                    `<p>Great job! You've finished the task.</p><p>Press "Next" to end the experiment.</p>`
+                ],
+                show_clickable_nav: true,
+                button_label_previous: "Prev",
+                button_label_next: "Next",
+            }
+        ];
+
+        jsPsych.run(timeline);
+    </script>
+{{ endblock }}

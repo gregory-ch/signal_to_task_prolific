@@ -1,0 +1,88 @@
+{{ extends "otree/Page.html" }}
+{{ block title }}Block 1{{ endblock }}
+
+{{ block styles }}
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+{{ endblock }}
+
+{{ block content }}
+    <div id="jspsych-block1-target"></div>
+    {{ formfields }}
+    <div id="form" style="display:none;">
+        {{ next_button }}
+    </div>
+{{ endblock }}
+
+{{ block scripts }}
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="{{ static 'dsst-t/js/init-jspsych.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst-instructions.js' }}"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
+    <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
+    <script>
+        var jsPsych = initJsPsych({
+            display_element: 'jspsych-block1-target',
+            on_finish: function() {
+                console.log('Block 1 finished');
+                var blockData = jsPsych.data.get().json();
+                var trials = jsPsych.data.get().count();
+                var score = jsPsych.data.get().filter({correct: true}).count();
+                console.log('Sending data:', {
+                    'action': 'save_data',
+                    'data': blockData,
+                    'trials': trials,
+                    'score': score
+                });
+                liveSend({
+                    'action': 'save_data',
+                    'data': blockData,
+                    'trials': trials,
+                    'score': score
+                });
+                document.getElementById('form').submit();
+            },
+            on_data_update: function(data) {
+                console.log('Trial data:', data);
+            }
+        });
+
+        function initializeExperiment() {
+            console.log('Initializing Block 1');
+
+            var img_files = js_vars.img_files;
+            var block_duration = js_vars.block_duration;
+            console.log('Image URLs:', img_files);
+            console.log('Block duration:', block_duration);
+
+            try {
+                var timeline = window.createBlockTimeline(img_files, 1);
+                console.log('Timeline for Block 1:', timeline);
+
+                var start_time = Date.now();
+
+                jsPsych.run(timeline).then(function() {
+                    if (Date.now() - start_time >= block_duration) {
+                        console.log('Maximum time reached, ending block');
+                        jsPsych.endExperiment('Block 1 completed');
+                    }
+                });
+
+                // Принудительно завершить блок через заданное время
+                setTimeout(function() {
+                    console.log('Forced end of block after ' + block_duration + ' milliseconds');
+                    jsPsych.endExperiment('Block 1 completed');
+                }, block_duration);
+
+            } catch (error) {
+                console.error('Error in initializeExperiment:', error);
+            }
+        }
+
+        // Ждем, пока все скрипты загрузятся
+        window.addEventListener('load', initializeExperiment);
+    </script>
+{{ endblock }}

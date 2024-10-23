@@ -1,0 +1,53 @@
+{{ extends "otree/Page.html" }}
+{{ block title }}Practice{{ endblock }}
+
+{{ block styles }}
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="{{ static 'dsst-t/css/dsst-css.min.css' }}" rel="stylesheet" type="text/css">
+{{ endblock }}
+
+{{ block content }}
+    <div id="jspsych-practice-target"></div>
+    {{ formfields }}
+    <div id="form" style="display:none;">
+        {{ next_button }}
+    </div>
+{{ endblock }}
+
+{{ block scripts }}
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="{{ static 'dsst-t/js/init-jspsych.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst.js' }}"></script>
+    <script src="{{ static 'dsst-t/js/plugin-dsst-instructions.js' }}"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-fullscreen@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-instructions@1.1.3"></script>
+    <script src="{{ static 'dsst-t/js/dsst-experiment.js' }}"></script>
+    <script>
+        var jsPsych = initJsPsych({
+            display_element: 'jspsych-practice-target',
+            on_finish: function() {
+                document.getElementById('form').submit();
+            }
+        });
+
+        var timeline = [
+            {
+                timeline: [{
+                    type: jsPsychDsst,
+                    stimuli: js_vars.img_files,
+                    target: jsPsych.timelineVariable('target'),
+                    valid_responses: jsPsych.timelineVariable('valid_responses')
+                }],
+                timeline_variables: [
+                    {target: 0, valid_responses: '1'},
+                    {target: 1, valid_responses: '2'},
+                    {target: 2, valid_responses: '3'},
+                ],
+                randomize_order: true
+            }
+        ];
+
+        jsPsych.run(timeline);
+    </script>
+{{ endblock }}
