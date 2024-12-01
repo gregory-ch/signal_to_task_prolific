@@ -149,6 +149,14 @@ class Instructions2(Page):
         return player.round_number == 1
 
 
+class ReadyPage(Page):
+    @staticmethod
+    def vars_for_template(player):
+        return {
+            'round_type': C.ROUNDS_INDICATION[player.round_number]
+        }
+
+
 class TaskPage(Page):
     timeout_seconds = C.TIMEOUT_SECONDS
 
@@ -218,4 +226,4 @@ class TaskPage(Page):
                 }
 
 
-page_sequence = [Instructions, Instructions2, TaskPage]
+page_sequence = [Instructions, Instructions2, ReadyPage, TaskPage]
