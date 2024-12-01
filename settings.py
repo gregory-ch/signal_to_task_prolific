@@ -324,6 +324,8 @@ PARTICIPANT_FIELDS = [
     'svo_angle',
     'svo_category',
     'symbol_sets',
+    'tasks',
+    'time_left',
 ]
 
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']

@@ -1,5 +1,6 @@
 from otree.api import *
 import random
+import time
 
 
 doc = """
@@ -11,8 +12,11 @@ doc = """
 class C(BaseConstants):
     NAME_IN_URL = 'calculator'
     PLAYERS_PER_GROUP = None
-    NUM_ROUNDS = 12
-    # 42 row
+    NUM_ROUNDS = 7
+    DEMO_MODE = False
+    TIMEOUT_SECONDS = 20  # 1.5 минуты
+    
+    # Образцы задач
     SIMPLE_SAMPLE = [
         [2,7,7,12],
         [2,2,3,8],
@@ -27,7 +31,7 @@ class C(BaseConstants):
         [9,9,12,12],
         [3,3,12,12]
     ]
-    # 805 row
+    
     HARD_SAMPLE = [
         [6,6,6,12],
         [3,7,8,9],
@@ -42,7 +46,8 @@ class C(BaseConstants):
         [2,10,11,11],
         [3,4,6,12]
     ]
-    SOLUTIONS={
+
+    SOLUTIONS = {
         (2,7,7,12):"12+7+7-2, 12x2+7-7",
         (2,2,3,8):"8x3+2-2, (8+3)x2+2",
         (2,11,11,12): "12x2+11-11",
@@ -69,8 +74,59 @@ class C(BaseConstants):
         (3,4,6,12):"12x4x3/6",
     }
 
+    ROUNDS_INDICATION = {1:"t", 2:"s", 3:"s", 4:'s', 5:"h", 6:"h", 7:"h"}
+
+
+def creating_session(subsession):
+    if subsession.round_number == 1:
+        # Копируем списки для безопасной работы
+        simple_tasks = C.SIMPLE_SAMPLE.copy()
+        hard_tasks = C.HARD_SAMPLE.copy()
+        
+        for p in subsession.get_players():
+            # Для тренировочного раунда
+            practice_task = random.choice(simple_tasks)
+            simple_tasks.remove(practice_task)
+            
+            # Для раундов 2-4 (2 простых, 1 сложное)
+            simple_for_early = random.sample(simple_tasks, 2)
+            for task in simple_for_early:
+                simple_tasks.remove(task)
+            hard_for_early = [random.choice(hard_tasks)]
+            hard_tasks.remove(hard_for_early[0])
+            
+            # Для раундов 5-7 (1 простое, 2 сложных)
+            simple_for_late = [random.choice(simple_tasks)]
+            hard_for_late = random.sample(hard_tasks, 2)
+            
+            # Формируем последовательность всех раундов
+            all_tasks = [practice_task]  # Раунд 1
+            
+            # Раунды 2-4
+            early_tasks = simple_for_early + hard_for_early
+            random.shuffle(early_tasks)
+            all_tasks.extend(early_tasks)
+            
+            # Раунды 5-7
+            late_tasks = simple_for_late + hard_for_late
+            random.shuffle(late_tasks)
+            all_tasks.extend(late_tasks)
+            
+            # Сохраняем в participant.vars
+            p.participant.tasks = all_tasks
+            print(f"Player {p.id_in_group} tasks:", all_tasks)
+
+    # Устанавливаем задачу для текущего раунда
+    for player in subsession.get_players():
+        current_task = player.participant.tasks[subsession.round_number - 1]
+        player.task_numbers = str(current_task)
+        key = tuple(sorted(current_task))
+        player.solution = C.SOLUTIONS.get(key, "No solution available")
+
+
 class Subsession(BaseSubsession):
     pass
+
 
 class Group(BaseGroup):
     pass
@@ -78,57 +134,56 @@ class Group(BaseGroup):
 
 class Player(BasePlayer):
     result = models.FloatField()
-    is_hard = models.BooleanField()
-    sample_index = models.IntegerField()
-    solution = models.StringField()  # Добавляем поле для хранения решения
+    task_numbers = models.StringField()
+    solution = models.StringField()
 
-# FUNCTIONS
-def creating_session(subsession):
-    for player in subsession.get_players():
-        player.is_hard = random.choice([True, False])
-        if player.is_hard:
-            player.sample_index = random.randint(0, len(C.HARD_SAMPLE) - 1)
-            sample = C.HARD_SAMPLE
-        else:
-            player.sample_index = random.randint(0, len(C.SIMPLE_SAMPLE) - 1)
-            sample = C.SIMPLE_SAMPLE
-        
-        initial_numbers = sample[player.sample_index]
-        key = tuple(sorted(initial_numbers))
-        player.solution = C.SOLUTIONS.get(key, "No solution available")
 
 # PAGES
 class calculator(Page):
     form_model = 'player'
     form_fields = ['result']
+    timeout_seconds = C.TIMEOUT_SECONDS
 
     @staticmethod
-    def vars_for_template(player: Player):
-        sample = C.HARD_SAMPLE if player.is_hard else C.SIMPLE_SAMPLE
-        initial_numbers = sample[player.sample_index]
+    def vars_for_template(player):
+        if player.task_numbers is None:
+            current_task = player.participant.tasks[player.round_number - 1]
+            player.task_numbers = str(current_task)
+            key = tuple(sorted(current_task))
+            player.solution = C.SOLUTIONS.get(key, "No solution available")
+
         return dict(
-            initial_numbers=initial_numbers,
+            initial_numbers=eval(player.task_numbers),
             solution=player.solution,
-            is_hard='Hard' if player.is_hard else 'Simple'
+            round_type=C.ROUNDS_INDICATION[player.round_number],
+            timeout_seconds=C.TIMEOUT_SECONDS
         )
 
     @staticmethod
-    def js_vars(player: Player):
-        sample = C.HARD_SAMPLE if player.is_hard else C.SIMPLE_SAMPLE
-        initial_numbers = sample[player.sample_index]
+    def js_vars(player):
+        if player.task_numbers is None:
+            current_task = player.participant.tasks[player.round_number - 1]
+            player.task_numbers = str(current_task)
+
         return dict(
-            initial_numbers=initial_numbers,
+            initial_numbers=eval(player.task_numbers),
+            round_number=player.round_number,
+            timeout_seconds=C.TIMEOUT_SECONDS
         )
 
     @staticmethod
-    def live_method(player: Player, data):
-        # Этот метод можно использовать для обработки действий в реальном времени
-        pass
+    def live_method(player, data):
+        if data.get('type') == 'save_time':
+            player.participant.vars['time_left'] = data['time_left']
+            return
 
+
+class ReadyPage(Page):
     @staticmethod
-    def before_next_page(player: Player, timeout_happened):
-        # Убедимся, что результат сохранен
-        if player.result is None:
-            player.result = 0  # или любое другое значение по умолчанию
+    def vars_for_template(player):
+        return {
+            'round_type': C.ROUNDS_INDICATION[player.round_number]
+        }
 
-page_sequence = [calculator]
+
+page_sequence = [ReadyPage, calculator]
