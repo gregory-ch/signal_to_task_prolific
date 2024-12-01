@@ -236,8 +236,8 @@ SESSION_CONFIGS = [
     
      dict(
         name='dsst',
-        display_name="dsst cursor",
-        app_sequence=["dsst"],
+        display_name="dsst",
+        app_sequence=["dsst_from_scratch"],
         num_demo_participants=1,
     ),
 
@@ -323,6 +323,7 @@ PARTICIPANT_FIELDS = [
     'stimuli',
     'svo_angle',
     'svo_category',
+    'symbol_sets',
 ]
 
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
