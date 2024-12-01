@@ -14,7 +14,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = None
     NUM_ROUNDS = 7
     DEMO_MODE = False
-    TIMEOUT_SECONDS = 20  # 1.5 минуты
+    TIMEOUT_SECONDS = 60  # 1.5 минуты
     
     # Образцы задач
     SIMPLE_SAMPLE = [
@@ -100,15 +100,15 @@ def creating_session(subsession):
             hard_for_late = random.sample(hard_tasks, 2)
             
             # Формируем последовательность всех раундов
-            all_tasks = [practice_task]  # Раунд 1
+            all_tasks = [(practice_task, 'simple')]  # Раунд 1
             
             # Раунды 2-4
-            early_tasks = simple_for_early + hard_for_early
+            early_tasks = [(task, 'simple') for task in simple_for_early] + [(task, 'hard') for task in hard_for_early]
             random.shuffle(early_tasks)
             all_tasks.extend(early_tasks)
             
             # Раунды 5-7
-            late_tasks = simple_for_late + hard_for_late
+            late_tasks = [(task, 'simple') for task in simple_for_late] + [(task, 'hard') for task in hard_for_late]
             random.shuffle(late_tasks)
             all_tasks.extend(late_tasks)
             
@@ -118,8 +118,9 @@ def creating_session(subsession):
 
     # Устанавливаем задачу для текущего раунда
     for player in subsession.get_players():
-        current_task = player.participant.tasks[subsession.round_number - 1]
+        current_task, source = player.participant.tasks[subsession.round_number - 1]
         player.task_numbers = str(current_task)
+        player.task_source = source  # Сохраняем источник задачи
         key = tuple(sorted(current_task))
         player.solution = C.SOLUTIONS.get(key, "No solution available")
 
@@ -140,6 +141,7 @@ class Player(BasePlayer):
     all_used = models.BooleanField(initial=False)
     timeout_happened = models.BooleanField(initial=False)
     solving_time = models.IntegerField()
+    task_source = models.StringField()  # Добавляем поле для источника задачи ('simple' или 'hard')
 
 
 
@@ -213,4 +215,16 @@ class ReadyPage(Page):
         }
 
 
-page_sequence = [ReadyPage, calculator]
+class Instructions(Page):
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == 1
+
+
+class Instructions2(Page):
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == 2  # Показываем только перед вторым раундом
+
+
+page_sequence = [Instructions, ReadyPage, Instructions2, calculator]
