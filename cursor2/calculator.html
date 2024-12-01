@@ -121,12 +121,15 @@
 {{ endblock }}
 
 {{ block content }}
+
+
 <div class="container">
     <!-- Info cards container -->
     <div class="info-cards">
         <div class="info-card">
             <div class="info-content">
                 <span class="info-text">Round {{ player.round_number }} of {{ C.NUM_ROUNDS }}</span>
+      
                 <span class="info-text">Time remaining: <span id="timer">{{ C.TIMEOUT_SECONDS }}</span></span>
             </div>
         </div>
@@ -141,57 +144,62 @@
         </div>
         {% endif %}
     </div>
+</div>
 
-    <!-- Calculator interface -->
-    <div id="calculator">
-        <div class="number-grid">
-            {{ for number in initial_numbers }}
-                <div class="number" data-value="{{ number }}">{{ number }}</div>
-            {{ endfor }}
-        </div>
-        <div class="operations">
-            <div class="operation" data-op="+">+</div>
-            <div class="operation" data-op="-">-</div>
-            <div class="operation" data-op="*">×</div>
-            <div class="operation" data-op="/">÷</div>
-        </div>
-        <div class="controls">
-            <div id="undo">←</div>
-            <div id="redo">→</div>
-        </div>
-    </div>
+<div style="text-align: center; margin: 20px 0;">
+    <p style="font-size: 18px; color: #212529;">Make 24 using all four numbers with (+, -, ×, ÷)</p>
+</div>
 
-    <div id="hidden-form-container" style="display: none;">
-        <form id="form" method="post">
-            <input type="hidden" name="result" id="id_result">
-            <input type="hidden" name="is_correct" id="id_is_correct">
-            <input type="hidden" name="all_used" id="id_all_used">
-            <input type="hidden" name="solving_time" id="id_solving_time">
-            {{ next_button }}
-        </form>
+<!-- Calculator interface -->
+<div id="calculator">
+    <div class="number-grid">
+        {{ for number in initial_numbers }}
+            <div class="number" data-value="{{ number }}">{{ number }}</div>
+        {{ endfor }}
     </div>
-    
-    <div id="result-display" style="text-align: center;"> <span id="result-value"></span></div>
-    
-    <div class="button-container">
-        <button id="submit-button">Submit Result</button>
-        {% if C.DEMO_MODE or player.round_number == 1 %}
-            <button type="button" id="show-solution-button">Show Solution</button>
-            <button type="button" id="show-difficulty-button">Show Difficulty</button>
-        {% endif %}
+    <div class="operations">
+        <div class="operation" data-op="+">+</div>
+        <div class="operation" data-op="-">-</div>
+        <div class="operation" data-op="*">×</div>
+        <div class="operation" data-op="/">÷</div>
     </div>
-    
-    <div id="solution-display" style="display: none;">Solution: {{ solution }}</div>
-    <div id="difficulty-display" style="display: none;">
-        Difficulty: 
-        {% if round_type == 'h' %}
-            Hard
-        {% elif round_type == 's' %}
-            Simple
-        {% else %}
-            Practice
-        {% endif %}
+    <div class="controls">
+        <div id="undo">←</div>
+        <div id="redo">→</div>
     </div>
+</div>
+
+<div id="hidden-form-container" style="display: none;">
+    <form id="form" method="post">
+        <input type="hidden" name="result" id="id_result">
+        <input type="hidden" name="is_correct" id="id_is_correct">
+        <input type="hidden" name="all_used" id="id_all_used">
+        <input type="hidden" name="solving_time" id="id_solving_time">
+        {{ next_button }}
+    </form>
+</div>
+
+<div id="result-display" style="text-align: center;"> <span id="result-value"></span></div>
+
+<div class="button-container">
+    <button id="submit-button">Submit Result</button>
+    {% if C.DEMO_MODE or player.round_number == 1 %}
+        <button type="button" id="show-solution-button">Show Solution</button>
+        <button type="button" id="show-difficulty-button">Show Difficulty</button>
+    {% endif %}
+</div>
+
+<div id="solution-display" style="display: none;">Solution: {{ solution }}</div>
+<div id="difficulty-display" style="display: none;">
+    Difficulty: 
+    {% if round_type == 'h' %}
+        Hard
+    {% elif round_type == 's' %}
+        Simple
+    {% else %}
+        Practice
+    {% endif %}
+</div>
 </div>
 {{ endblock }}
 

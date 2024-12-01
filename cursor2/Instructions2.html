@@ -1,0 +1,103 @@
+{{ block title }}
+    Additional Instructions
+{{ endblock }}
+
+{{ block content }}
+<div class="container">
+    <!-- Info cards container -->
+    <!-- Scoring info -->
+    <div class="outer-card">
+        <h4 class="mb-4">Important Information:</h4>
+        <div class="instructions-text mt-4">
+            <p>Before each task, you will see a difficulty indicator.</p>
+            <p>This indicator shows the likely difficulty of the upcoming task.</p>
+            <p>Remember that this is a probability - the actual difficulty might be different.</p>
+            <b><p>The less time you spend, the higher your score will be.</p></b>
+        </div>
+    </div>
+</div>
+
+    <!-- Example cards -->
+    <div class="example-cards">
+        <div class="info-card warning-low mb-3">
+            Task difficulty is likely low
+        </div>
+        <div class="description-card mb-4">
+            When you see this indicator, there is a 2/3 probability that the task will be relatively easy.
+        </div>
+
+        <div class="info-card warning-high mb-3">
+            Task difficulty is likely high
+        </div>
+        <div class="description-card mb-4">
+            When you see this indicator, there is a 2/3 probability that the task will be relatively difficult.
+        </div>
+    </div>
+
+
+
+<style>
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.info-cards {
+    width: 600px;
+    margin: 0 auto 20px auto;
+}
+
+.info-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.example-cards {
+    width: 600px;
+    margin: 0 auto 20px auto;
+}
+
+.description-card {
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+}
+
+.warning-high {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.warning-low {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+.outer-card {
+    width: 600px;
+    margin: 0 auto;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+}
+
+.instructions-text {
+    text-align: center;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.instructions-text p {
+    margin-bottom: 10px;
+}
+</style>
+
+{{ next_button }}
+{{ endblock }} 
