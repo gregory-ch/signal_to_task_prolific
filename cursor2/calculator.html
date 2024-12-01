@@ -162,9 +162,12 @@
     </div>
 
     <div id="hidden-form-container" style="display: none;">
-        <form id="game-form" method="post">
-            {{ formfields }}
+        <form id="form" method="post">
             <input type="hidden" name="result" id="id_result">
+            <input type="hidden" name="is_correct" id="id_is_correct">
+            <input type="hidden" name="all_used" id="id_all_used">
+            <input type="hidden" name="solving_time" id="id_solving_time">
+            {{ next_button }}
         </form>
     </div>
     
@@ -303,14 +306,83 @@
             }
         });
 
-        $('#submit-button').click(function() {
-            // Если нет видимого результата, устанавливаем 0
-            if ($('.number:visible').length === 1) {
-                $('#id_result').val($('.number:visible').first().data('value'));
-            } else {
-                $('#id_result').val(0);  // Устанавливаем 0 если нет результата
+        function checkResult() {
+            // Проверяем результат и использование всех чисел
+            let finalResult = 0;
+            let visibleNumbers = $('.number:visible');
+            let allNumbers = $('.number');
+            
+            // Проверяем, все ли числа использованы (должен остаться только один видимый элемент)
+            let allUsed = allNumbers.length - visibleNumbers.length === allNumbers.length - 1;
+            
+            // Получаем финальный результат
+            if (visibleNumbers.length === 1) {
+                finalResult = parseFloat(visibleNumbers.first().data('value'));
             }
-            $('#game-form').submit();
+            
+            console.log('Checking result:');
+            console.log('Final result:', finalResult);
+            console.log('All used:', allUsed);
+            console.log('Visible numbers:', visibleNumbers.length);
+            console.log('All numbers:', allNumbers.length);
+            
+            // Вычисляем время решения в секундах
+            const solving_time = js_vars.timeout_seconds - timeLeft;
+            
+            // Сохраняем результат и флаги
+            $('#id_result').val(finalResult);
+            $('#id_is_correct').val(Math.abs(finalResult - 24) < 0.0001 ? 1 : 0);
+            $('#id_all_used').val(allUsed ? 1 : 0);
+            $('#id_solving_time').val(solving_time);  // Сохраняем время решения
+            
+            console.log('Form values before submit:', {
+                result: $('#id_result').val(),
+                is_correct: $('#id_is_correct').val(),
+                all_used: $('#id_all_used').val(),
+                solving_time: $('#id_solving_time').val()
+            });
+        }
+
+        // Timer functionality
+        let timeLeft = js_vars.timeout_seconds;
+        const timerDisplay = document.getElementById('timer');
+
+        // Пытаемся получить сохраненное время из sessionStorage
+        const roundKey = `round_${js_vars.round_number}_time`;
+        const savedTime = sessionStorage.getItem(roundKey);
+        const savedStartTime = sessionStorage.getItem(`${roundKey}_start`);
+
+        if (savedTime && savedStartTime) {
+            // Вычисляем оставшееся время с учетом прошедшего времени
+            const elapsedSeconds = Math.floor((Date.now() - parseInt(savedStartTime)) / 1000);
+            timeLeft = Math.max(0, parseInt(savedTime) - elapsedSeconds);
+        } else {
+            // Если нет сохраненного времени, начинаем с начала
+            timeLeft = js_vars.timeout_seconds;
+            sessionStorage.setItem(roundKey, timeLeft);
+            sessionStorage.setItem(`${roundKey}_start`, Date.now());
+        }
+
+        timerDisplay.textContent = timeLeft;
+
+        const timer = setInterval(() => {
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+            sessionStorage.setItem(roundKey, timeLeft);
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                sessionStorage.removeItem(roundKey);
+                sessionStorage.removeItem(`${roundKey}_start`);
+                checkResult();  // Проверяем результат перед отправкой
+                document.getElementById('form').submit();
+            }
+        }, 1000);
+
+        // Обновляем обработчик кнопки submit
+        $('#submit-button').click(function() {
+            checkResult();  // Проверяем результат перед отправкой
+            $('#form').submit();
         });
 
         $('#show-solution-button').click(function(e) {
@@ -360,50 +432,6 @@
                 $('#submit-button').hide();
             }
         }
-
-        // Timer functionality
-        let timeLeft = js_vars.timeout_seconds;
-        const timerDisplay = document.getElementById('timer');
-        
-        // Пытаемся получить сохраненное время из sessionStorage
-        const roundKey = `round_${js_vars.round_number}_time`;
-        const savedTime = sessionStorage.getItem(roundKey);
-        const startTime = sessionStorage.getItem(`${roundKey}_start`);
-
-        if (savedTime && startTime) {
-            // Вычисляем оставшееся время с учетом прошедшего времени
-            const elapsedSeconds = Math.floor((Date.now() - parseInt(startTime)) / 1000);
-            timeLeft = Math.max(0, parseInt(savedTime) - elapsedSeconds);
-        } else {
-            // Если нет сохраненного времени, начинаем с начала
-            timeLeft = js_vars.timeout_seconds;
-            sessionStorage.setItem(roundKey, timeLeft);
-            sessionStorage.setItem(`${roundKey}_start`, Date.now());
-        }
-
-        timerDisplay.textContent = timeLeft;
-        
-        const timer = setInterval(() => {
-            timeLeft--;
-            timerDisplay.textContent = timeLeft;
-            
-            // Сохраняем текущее время
-            sessionStorage.setItem(roundKey, timeLeft);
-            
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                sessionStorage.removeItem(roundKey);
-                sessionStorage.removeItem(`${roundKey}_start`);
-                // Если нет видимого результата, устанавливаем 0
-                if ($('.number:visible').length === 1) {
-                    $('#id_result').val($('.number:visible').first().data('value'));
-                } else {
-                    $('#id_result').val(0);
-                }
-                // Отправляем форму
-                document.getElementById('form').submit();
-            }
-        }, 1000);
     });
 </script>
 {{ endblock }}

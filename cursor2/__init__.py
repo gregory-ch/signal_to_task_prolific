@@ -136,13 +136,33 @@ class Player(BasePlayer):
     result = models.FloatField()
     task_numbers = models.StringField()
     solution = models.StringField()
+    is_correct = models.BooleanField(initial=False)
+    all_used = models.BooleanField(initial=False)
+    timeout_happened = models.BooleanField(initial=False)
+    solving_time = models.IntegerField()
+
+
+
 
 
 # PAGES
 class calculator(Page):
     form_model = 'player'
-    form_fields = ['result']
+    form_fields = ['result', 'is_correct', 'all_used', 'solving_time']
     timeout_seconds = C.TIMEOUT_SECONDS
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        print("Form data received:")
+        print("result:", player.result)
+        print("is_correct:", player.is_correct)
+        print("all_used:", player.all_used)
+        print("timeout_happened:", timeout_happened)
+
+        if timeout_happened:
+            player.is_correct = False
+            player.all_used = False
+            player.result = 0
 
     @staticmethod
     def vars_for_template(player):
@@ -176,6 +196,13 @@ class calculator(Page):
         if data.get('type') == 'save_time':
             player.participant.vars['time_left'] = data['time_left']
             return
+        
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        print("Before next page:")
+        print("is_correct:", player.is_correct)
+        print("result:", player.result)
+        print("all_used:", player.all_used)
 
 
 class ReadyPage(Page):
