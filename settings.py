@@ -1,5 +1,18 @@
 from os import environ
 
+class CorsMiddleware:
+    def __init__(self, app):
+        self.app = app
+        
+    def __call__(self, environ, start_response):
+        def custom_start_response(status, headers, exc_info=None):
+            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
+            headers.append(('Access-Control-Allow-Methods', 'POST, OPTIONS'))
+            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
+            return start_response(status, headers, exc_info)
+            
+        return self.app(environ, custom_start_response)
+
 SESSION_CONFIGS = [
     # dict(
     #     name='intergenerational',
@@ -329,3 +342,7 @@ PARTICIPANT_FIELDS = [
 ]
 
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
+
+MIDDLEWARE = [
+    'settings.CorsMiddleware'  # Добавляем наш middleware
+] 
