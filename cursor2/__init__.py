@@ -88,43 +88,54 @@ def creating_session(subsession):
         hard_tasks = C.HARD_SAMPLE.copy()
         
         for p in subsession.get_players():
+            # Определяем, какой тип задач идет первым
+            p.participant.first_set_type = random.choice(['simple', 'hard'])
+            
+            # Определяем, какую позицию будем менять (0, 1 или 2)
+            swap_position = random.randint(0, 2)
+            p.participant.swap_position = swap_position  # Сохраняем для последующего использования
+            
             # Для тренировочного раунда
             practice_task = random.choice(simple_tasks)
             simple_tasks.remove(practice_task)
             
-            # Для раундов 2-4 (2 простых, 1 сложное)
-            simple_for_early = random.sample(simple_tasks, 2)
-            for task in simple_for_early:
-                simple_tasks.remove(task)
-            hard_for_early = [random.choice(hard_tasks)]
-            hard_tasks.remove(hard_for_early[0])
+            # Подготовка задач для первой и второй тройки
+            if p.participant.first_set_type == 'simple':
+                first_set = random.sample(simple_tasks, 3)
+                for task in first_set:
+                    simple_tasks.remove(task)
+                second_set = random.sample(hard_tasks, 3)
+            else:
+                first_set = random.sample(hard_tasks, 3)
+                for task in first_set:
+                    hard_tasks.remove(task)
+                second_set = random.sample(simple_tasks, 3)
             
-            # Для раундов 5-7 (1 простое, 2 сложных)
-            simple_for_late = [random.choice(simple_tasks)]
-            hard_for_late = random.sample(hard_tasks, 2)
+            # Меняем местами элементы на выбранной позиции
+            first_set[swap_position], second_set[swap_position] = second_set[swap_position], first_set[swap_position]
+            
+            # Вычисляем номер раунда, где произошла замена (учитывая тренировочный раунд)
+            swapped_round = swap_position + 2  # +2 потому что: +1 для индекса в раунд и +1 для пропуска тренировочного
+            second_swapped_round = swap_position + 5  # +5 потому что: +2 для начала второй тройки и +3 для позиции
             
             # Формируем последовательность всех раундов
-            all_tasks = [(practice_task, 'simple')]  # Раунд 1
+            all_tasks = [(practice_task, 'training')]  # Раунд 1
+            all_tasks.extend((task, p.participant.first_set_type) for task in first_set)  # Раунды 2-4
+            all_tasks.extend((task, 'hard' if p.participant.first_set_type == 'simple' else 'simple') for task in second_set)  # Раунды 5-7
             
-            # Раунды 2-4
-            early_tasks = [(task, 'simple') for task in simple_for_early] + [(task, 'hard') for task in hard_for_early]
-            random.shuffle(early_tasks)
-            all_tasks.extend(early_tasks)
-            
-            # Раунды 5-7
-            late_tasks = [(task, 'simple') for task in simple_for_late] + [(task, 'hard') for task in hard_for_late]
-            random.shuffle(late_tasks)
-            all_tasks.extend(late_tasks)
-            
-            # Сохраняем в participant.vars
+            # Сохраняем информацию
             p.participant.tasks = all_tasks
+            p.participant.swapped_positions = [swapped_round, second_swapped_round]
             print(f"Player {p.id_in_group} tasks:", all_tasks)
+            print(f"Swapped position {swap_position}, rounds {swapped_round} and {second_swapped_round}")
 
     # Устанавливаем задачу для текущего раунда
     for player in subsession.get_players():
-        current_task, source = player.participant.tasks[subsession.round_number - 1]
-        player.task_numbers = str(current_task)
-        player.task_source = source  # Сохраняем источник задачи
+        current_task, task_type = player.participant.tasks[player.round_number - 1]
+        player.task_numbers = str(list(current_task))
+        player.task_source = task_type
+        player.is_swapped = player.round_number in player.participant.swapped_positions
+        player.swap_position = player.participant.swap_position if player.round_number in player.participant.swapped_positions else None
         key = tuple(sorted(current_task))
         player.solution = C.SOLUTIONS.get(key, "No solution available")
 
@@ -145,7 +156,9 @@ class Player(BasePlayer):
     all_used = models.BooleanField(initial=False)
     timeout_happened = models.BooleanField(initial=False)
     solving_time = models.IntegerField()
-    task_source = models.StringField()  # Добавляем поле для источника задачи ('simple' или 'hard')
+    task_source = models.StringField()  # 'simple', 'hard', или 'training'
+    is_swapped = models.BooleanField()  # был ли этот раунд обменен местами
+    swap_position = models.IntegerField(blank=True)  # какая позиция была обменена (0, 1 или 2)
 
 
 
@@ -173,15 +186,20 @@ class calculator(Page):
     @staticmethod
     def vars_for_template(player):
         if player.task_numbers is None:
-            current_task = player.participant.tasks[player.round_number - 1]
-            player.task_numbers = str(current_task)
+            current_task, task_type = player.participant.tasks[player.round_number - 1]
+            player.task_numbers = str(list(current_task))
             key = tuple(sorted(current_task))
             player.solution = C.SOLUTIONS.get(key, "No solution available")
 
+        # Show difficulty based on actual task type
+        difficulty = 'high' if player.task_source == 'hard' else (
+            'training' if player.task_source == 'training' else 'low'
+        )
+        
         return dict(
             initial_numbers=eval(player.task_numbers),
             solution=player.solution,
-            round_type=C.ROUNDS_INDICATION[player.round_number],
+            round_type=difficulty,
             timeout_seconds=C.TIMEOUT_SECONDS
         )
 
@@ -214,8 +232,17 @@ class calculator(Page):
 class ReadyPage(Page):
     @staticmethod
     def vars_for_template(player):
+        # Convert new difficulty types to old format for template compatibility
+        difficulty_map = {
+            'high': 'h',
+            'low': 's',
+            'training': 't'
+        }
+        difficulty = 'h' if player.task_source == 'hard' else (
+            't' if player.task_source == 'training' else 's'
+        )
         return {
-            'round_type': C.ROUNDS_INDICATION[player.round_number]
+            'round_type': difficulty
         }
 
 

@@ -29,40 +29,58 @@ class C(BaseConstants):
         ('true_complex_1_1', 'true_complex_2_2', 'true_complex_3_3'),
         ('false_complex_1', 'false_complex_2', 'false_complex_3')
     ]
-    ROUNDS_INDICATION = {1:"t", 2: "s", 3: "s", 4:'s', 5:"c", 6:"c", 7:"c"}
 
 
 def creating_session(subsession):
     if subsession.round_number == 1:
-        # Создаем копии списков перед модификацией
-        simple_sets = [list(x) for x in C.SIMPLE_SETS.copy()]
-        random.shuffle(simple_sets)
-        
-        complex_sets = [list(x) for x in C.COMPLEX_SETS.copy()]
-        random.shuffle(complex_sets)
-        
-        # Создаем копию базовых символов
-        basic_symbols = list(C.BASIC_SYMBOLS)
-        
-        # Combine all sets in order
-        all_sets = [basic_symbols] + simple_sets + complex_sets
-        
-        # Сохраняем в participant.symbol_sets для всех игроков
         for p in subsession.get_players():
+            p.participant.first_set_type = random.choice(['simple', 'complex'])
+            
+            # Create deep copies of the sets
+            simple_sets = [list(set_tuple) for set_tuple in C.SIMPLE_SETS]
+            complex_sets = [list(set_tuple) for set_tuple in C.COMPLEX_SETS]
+            basic_symbols = list(C.BASIC_SYMBOLS)
+            
+            # Shuffle the copies
+            random.shuffle(simple_sets)
+            random.shuffle(complex_sets)
+            
+            # Swap first elements between simple and complex sets
+            simple_sets[0], complex_sets[0] = complex_sets[0], simple_sets[0]
+            
+            # Calculate actual positions of swapped elements after arrangement
+            if p.participant.first_set_type == 'simple':
+                swapped_positions = [2, 5]  # Adjusted for training round: 2 (first after training) and 5 (first of complex)
+                all_sets = [basic_symbols] + simple_sets + complex_sets
+                set_types = ['training'] + ['simple'] * 3 + ['complex'] * 3
+            else:
+                swapped_positions = [2, 5]  # Same positions but different set types
+                all_sets = [basic_symbols] + complex_sets + simple_sets
+                set_types = ['training'] + ['complex'] * 3 + ['simple'] * 3
+            
+            # Store information
             p.participant.symbol_sets = all_sets
+            p.participant.set_types = set_types
+            p.participant.swapped_positions = swapped_positions
 
+    # Set up each player's round
     for player in subsession.get_players():
-        # Get the symbol set for this round from participant.symbol_sets
-        current_symbols = player.participant.symbol_sets[subsession.round_number - 1]
+        current_symbols = player.participant.symbol_sets[player.round_number - 1]
+        player.set_type = player.participant.set_types[player.round_number - 1]
+        # Now this correctly identifies swapped sets
+        player.is_swapped = player.round_number in player.participant.swapped_positions
         
-        # Создаем trials явно
+        # Generate trials without consecutive repetitions
         trials = []
+        last_draw = None
         for i in range(C.NUM_TRIALS_MAX):
             trial_num = i + 1
-            draw = random.choice(C.OPTIONS)
+            available_options = [opt for opt in C.OPTIONS if opt != last_draw]
+            draw = random.choice(available_options)
+            last_draw = draw
             trials.append((trial_num, draw))
         
-        # Сохраняем и проверяем
+        # Save the generated sequence
         player.trials_sequence = str(trials)
         player.current_trial = 1
         player.wrong_attempts = str({})
@@ -134,6 +152,8 @@ class Player(BasePlayer):
     total_trials_completed = models.IntegerField(initial=0)
     total_wrong_attempts = models.IntegerField(initial=0)
     symbol_names = models.StringField()
+    set_type = models.StringField()  # 'simple' or 'complex'
+    is_swapped = models.BooleanField()  # whether this round's symbol was swapped
 
 
 # PAGES
@@ -152,8 +172,12 @@ class Instructions2(Page):
 class ReadyPage(Page):
     @staticmethod
     def vars_for_template(player):
+        # Show difficulty based on actual set type rather than fixed rounds
+        difficulty = 'high' if player.set_type == 'complex' else (
+            'training' if player.set_type == 'training' else 'low'
+        )
         return {
-            'round_type': C.ROUNDS_INDICATION[player.round_number]
+            'round_type': difficulty
         }
 
 
@@ -163,9 +187,13 @@ class TaskPage(Page):
     @staticmethod
     def vars_for_template(player):
         symbols = eval(player.symbol_names)
+        # Show difficulty based on actual set type rather than fixed rounds
+        difficulty = 'high' if player.set_type == 'complex' else (
+            'training' if player.set_type == 'training' else 'low'
+        )
         return {
             'symbol_paths': [f"dsst-t/img/{symbol}.png" for symbol in symbols],
-            'round_type': C.ROUNDS_INDICATION[player.round_number]
+            'round_type': difficulty
         }
 
     @staticmethod
