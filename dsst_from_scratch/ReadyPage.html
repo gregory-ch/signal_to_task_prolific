@@ -11,13 +11,17 @@
             </div>
         </div>
 
-        {% if round_type == 'c' %}
+        {% if round_type == 'high' %}
         <div class="info-card warning-high">
             Task difficulty is likely high
         </div>
-        {% elif round_type == 's' %}
+        {% elif round_type == 'low' %}
         <div class="info-card warning-low">
             Task difficulty is likely low
+        </div>
+        {% elif round_type == 'training' %}
+        <div class="info-card warning-training">
+            Training round
         </div>
         {% endif %}
     </div>
@@ -72,6 +76,12 @@
     background-color: #cce5ff;
     border-color: #b8daff;
     color: #004085;
+}
+
+.warning-training {
+    background-color: #d3d3d3;
+    border-color: #c0c0c0;
+    color: #666666;
 }
 
 .outer-card {
