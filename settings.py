@@ -5,25 +5,38 @@ class CorsMiddleware:
         self.app = app
         
     def __call__(self, environ, start_response):
-        # Специальная обработка для OPTIONS запросов
+        # Добавляем обработку всех методов, не только OPTIONS
+        def custom_start_response(status, headers, exc_info=None):
+            headers = list(headers)
+            # Всегда добавляем CORS заголовки
+            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
+            headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
+            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
+            headers.append(('Access-Control-Allow-Credentials', 'true'))
+            headers.append(('Access-Control-Max-Age', '86400'))
+            
+            # Если это перенаправление (300-308), добавляем CORS заголовки
+            if status.startswith(('301', '302', '303', '307', '308')):
+                for i, (header, value) in enumerate(headers):
+                    if header == 'Location':
+                        # Сохраняем CORS заголовки при перенаправлении
+                        headers[i] = ('Access-Control-Expose-Headers', 'Location')
+                        break
+            
+            return start_response(status, headers, exc_info)
+        
         if environ.get('REQUEST_METHOD') == 'OPTIONS':
             headers = [
                 ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
-                ('Access-Control-Allow-Methods', 'POST, OPTIONS'),
+                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
                 ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
-                ('Access-Control-Max-Age', '86400'),  # кэшируем на 24 часа
+                ('Access-Control-Allow-Credentials', 'true'),
+                ('Access-Control-Max-Age', '86400'),
                 ('Content-Type', 'text/plain'),
-                ('Content-Length', '0')
+                ('Content-Length', '0'),
             ]
             start_response('200 OK', headers)
             return [b'']
-            
-        def custom_start_response(status, headers, exc_info=None):
-            headers = list(headers)  # конвертируем tuple в list
-            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
-            headers.append(('Access-Control-Allow-Methods', 'POST, OPTIONS'))
-            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
-            return start_response(status, headers, exc_info)
             
         return self.app(environ, custom_start_response)
 
@@ -183,11 +196,11 @@ PARTICIPANT_FIELDS = [
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
 MIDDLEWARE = [
+    'settings.CorsMiddleware',  # Должен быть первым!
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'settings.CorsMiddleware',
 ]
 
 # CORS settings
@@ -220,6 +233,11 @@ CORS_ALLOW_HEADERS = [
 # For iframe embedding
 X_FRAME_OPTIONS = 'ALLOW-FROM https://gregory-ch.github.io'
 CSRF_TRUSTED_ORIGINS = ['https://gregory-ch.github.io']
+
+# Добавьте эти настройки
+CORS_ALLOW_CREDENTIALS = True
+CORS_REPLACE_HTTPS_REFERER = True
+CORS_URLS_REGEX = r'^/api/.*$'
 
 
 # dict(
