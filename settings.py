@@ -6,43 +6,42 @@ class CorsMiddleware:
         
     def __call__(self, environ, start_response):
         original_path = environ.get('PATH_INFO', '')
+        request_method = environ.get('REQUEST_METHOD', '')
         
-        # Принудительно добавляем слэш к API путям
-        if original_path.startswith('/api/') and not original_path.endswith('/'):
-            environ['PATH_INFO'] = original_path + '/'
-            
+        # Если это API запрос без завершающего слэша
+        if original_path == '/api/sessions' and not original_path.endswith('/'):
+            if request_method == 'OPTIONS':
+                # Отвечаем на preflight запрос напрямую
+                headers = [
+                    ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
+                    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
+                    ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
+                    ('Content-Type', 'text/plain'),
+                    ('Content-Length', '0')
+                ]
+                start_response('200 OK', headers)
+                return [b'']
+            else:
+                # Для других методов делаем явное перенаправление с CORS заголовками
+                headers = [
+                    ('Location', original_path + '/'),
+                    ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
+                    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
+                    ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
+                    ('Content-Type', 'text/plain'),
+                    ('Content-Length', '0')
+                ]
+                start_response('307 Temporary Redirect', headers)
+                return [b'']
+        
+        # Для всех остальных запросов
         def custom_start_response(status, headers, exc_info=None):
-            status_code = int(status.split()[0])
             headers = list(headers)
-            
-            # Добавляем CORS заголовки для всех ответов
-            cors_headers = [
-                ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
-                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
-                ('Access-Control-Expose-Headers', 'Location'),
-            ]
-            
-            # Добавляем все CORS заголовки
-            for header in cors_headers:
-                if header not in headers:
-                    headers.append(header)
-                    
+            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
+            headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
+            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
             return start_response(status, headers, exc_info)
-            
-        # Специальная обработка OPTIONS запросов
-        if environ.get('REQUEST_METHOD') == 'OPTIONS':
-            headers = [
-                ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
-                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
-                ('Access-Control-Expose-Headers', 'Location'),
-                ('Content-Type', 'text/plain'),
-                ('Content-Length', '0')
-            ]
-            start_response('200 OK', headers)
-            return [b'']
-            
+        
         return self.app(environ, custom_start_response)
 
 
