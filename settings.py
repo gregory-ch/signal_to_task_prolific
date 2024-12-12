@@ -163,7 +163,7 @@ ROOMS = [
 ]
 
 # if an app is included in SESSION_CONFIGS, you don't need to list it here
-INSTALLED_APPS = ['otree']
+INSTALLED_APPS = ['otree', 'corsheaders']
 
 PARTICIPANT_FIELDS = [
     'booking_time',
@@ -183,9 +183,46 @@ PARTICIPANT_FIELDS = [
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
 MIDDLEWARE = [
-    'settings.CorsMiddleware'  # Добавляем наш middleware
-] 
- # dict(
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'settings.CorsMiddleware',
+]
+
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "https://gregory-ch.github.io",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'OPTIONS',
+]
+
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# For iframe embedding
+X_FRAME_OPTIONS = 'ALLOW-FROM https://gregory-ch.github.io'
+CSRF_TRUSTED_ORIGINS = ['https://gregory-ch.github.io']
+
+
+# dict(
     #     name='intergenerational',
     #     app_sequence=['intergenerational'],
     #     display_name="""
