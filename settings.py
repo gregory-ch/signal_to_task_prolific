@@ -5,20 +5,26 @@ class CorsMiddleware:
         self.app = app
         
     def __call__(self, environ, start_response):
-        # Добавляем слэш в конец URL если его нет
-        path_info = environ.get('PATH_INFO', '')
-        if path_info.startswith('/api/') and not path_info.endswith('/'):
-            environ['PATH_INFO'] = path_info + '/'
-        
-        def custom_start_response(status, headers, exc_info=None):
-            headers = list(headers)
-            # Добавляем CORS заголовки независимо от статуса ответа
-            cors_headers = [
+        # Обрабатываем перенаправление для API endpoints
+        original_path = environ.get('PATH_INFO', '')
+        if original_path.startswith('/api/') and not original_path.endswith('/'):
+            # Перенаправляем с добавлением CORS заголовков
+            new_path = original_path + '/'
+            headers = [
+                ('Location', new_path),
                 ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
                 ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
                 ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
+                ('Content-Length', '0')
             ]
-            headers.extend(cors_headers)
+            start_response('307 Temporary Redirect', headers)
+            return [b'']
+            
+        def custom_start_response(status, headers, exc_info=None):
+            headers = list(headers)
+            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
+            headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
+            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
             return start_response(status, headers, exc_info)
             
         if environ.get('REQUEST_METHOD') == 'OPTIONS':
@@ -190,5 +196,5 @@ PARTICIPANT_FIELDS = [
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
 MIDDLEWARE = [
-    'settings.CorsMiddleware',  # Должен быть первым
+    'settings.CorsMiddleware',
 ]
