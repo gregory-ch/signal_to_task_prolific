@@ -5,33 +5,38 @@ class CorsMiddleware:
         self.app = app
         
     def __call__(self, environ, start_response):
-        # Обрабатываем перенаправление для API endpoints
         original_path = environ.get('PATH_INFO', '')
+        
+        # Принудительно добавляем слэш к API путям
         if original_path.startswith('/api/') and not original_path.endswith('/'):
-            # Перенаправляем с добавлением CORS заголовков
-            new_path = original_path + '/'
-            headers = [
-                ('Location', new_path),
+            environ['PATH_INFO'] = original_path + '/'
+            
+        def custom_start_response(status, headers, exc_info=None):
+            status_code = int(status.split()[0])
+            headers = list(headers)
+            
+            # Добавляем CORS заголовки для всех ответов
+            cors_headers = [
                 ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
                 ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
                 ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
-                ('Content-Length', '0')
+                ('Access-Control-Expose-Headers', 'Location'),
             ]
-            start_response('307 Temporary Redirect', headers)
-            return [b'']
             
-        def custom_start_response(status, headers, exc_info=None):
-            headers = list(headers)
-            headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
-            headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
-            headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
+            # Добавляем все CORS заголовки
+            for header in cors_headers:
+                if header not in headers:
+                    headers.append(header)
+                    
             return start_response(status, headers, exc_info)
             
+        # Специальная обработка OPTIONS запросов
         if environ.get('REQUEST_METHOD') == 'OPTIONS':
             headers = [
                 ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
                 ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
                 ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
+                ('Access-Control-Expose-Headers', 'Location'),
                 ('Content-Type', 'text/plain'),
                 ('Content-Length', '0')
             ]
