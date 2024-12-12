@@ -22,7 +22,7 @@ class CorsMiddleware:
                 start_response('200 OK', headers)
                 return [b'']
             else:
-                # Для других методов делаем явное перенаправление с CORS заголовками
+                # Для других методов делаем явное перенаправ��ение с CORS заголовками
                 headers = [
                     ('Location', original_path + '/'),
                     ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),
@@ -40,6 +40,8 @@ class CorsMiddleware:
             headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
             headers.append(('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'))
             headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
+            headers.append(('X-Frame-Options', 'ALLOW-FROM https://gregory-ch.github.io'))
+            headers.append(('Content-Security-Policy', "frame-ancestors 'self' https://gregory-ch.github.io"))
             return start_response(status, headers, exc_info)
         
         return self.app(environ, custom_start_response)
