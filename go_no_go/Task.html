@@ -7,45 +7,105 @@
       <img class="img-stimulus" src="{{ static path }}" style="display: none"></img>
   {{ endfor }}
 
+  <div class="stimulus-container" style="display: flex; justify-content: space-between; width: 100%; margin: 20px 0;">
+    <div class="left-stimulus" style="width: 45%;"></div>
+    <div class="right-stimulus" style="width: 45%;"></div>
+  </div>
+
   <div id="feedback" style="font-size: 100px"></div>
   <div id="loading">Get ready...</div>
 
   <script>
       let images = document.getElementsByClassName('img-stimulus');
       let feedback = document.getElementById('feedback');
+      let leftStimulus = document.querySelector('.left-stimulus');
+      let rightStimulus = document.querySelector('.right-stimulus');
       let displayed_timestamp;
       let loading = document.getElementById('loading');
-      let image_id_global = null;
+      let left_image_id_global = null;
+      let right_image_id_global = null;
 
-      // time before we unhideDiv the first image (give time to get hands ready on keyboard)
       const INITIAL_DELAY = 2000;
-
-      // time in between showing showing ✓ or ✗, and showing the next image
       const IN_BETWEEN_DELAY = 1000;
 
       function liveRecv(data) {
-          for (let image of images) {
-              image.style.display = 'none';
-          }
+          console.log("Received data from server:", data);  // Отладочное сообщение
+          
+          leftStimulus.innerHTML = '';
+          rightStimulus.innerHTML = '';
+          
           if (data.feedback) {
             feedback.innerHTML = data.feedback;
             feedback.style.display = 'block';
+            
+            // Отправляем сообщение о результате через oTree
+            if (data.feedback === '✓') {
+                liveSend({
+                    type: 'eye_link',
+                    message: 'RESPONSE:CORRECT'
+                });
+            } else if (data.feedback === '✗') {
+                liveSend({
+                    type: 'eye_link',
+                    message: 'RESPONSE:INCORRECT'
+                });
+            }
           }
+          
           if (data.is_finished) {
+              console.log("Experiment finished");  // Отладочное сообщение
+              feedback.style.display = 'none';
               document.getElementById('form').submit();
-          } else {
-            image_id_global = data.image_id;
-            setTimeout(() => loadImage(data.image_id), IN_BETWEEN_DELAY);
+              return;
           }
+          
+          if (data.left_image_id === undefined || data.right_image_id === undefined) {
+              console.log("Missing image IDs in data");  // Отладочное сообщение
+              return;
+          }
+          
+          console.log(`Loading images: left=${data.left_image_id}, right=${data.right_image_id}`);  // Отладочное сообщение
+          
+          left_image_id_global = data.left_image_id;
+          right_image_id_global = data.right_image_id;
+          
+          // Отправляем сообщение о начале нового триала
+          liveSend({
+              type: 'eye_link',
+              message: `TRIAL_START:${data.trialId}`
+          });
+          
+          setTimeout(() => loadImages(data.left_image_id, data.right_image_id), IN_BETWEEN_DELAY);
       }
 
-      function loadImage(image_id) {
+      function loadImages(leftImageId, rightImageId) {
           feedback.style.display = 'none';
-          images[image_id].style.display = 'block';
+          
+          let leftImg = images[leftImageId].cloneNode(true);
+          let rightImg = images[rightImageId].cloneNode(true);
+          
+          leftImg.style.display = 'block';
+          rightImg.style.display = 'block';
+          
+          leftStimulus.appendChild(leftImg);
+          rightStimulus.appendChild(rightImg);
+          
           isRefractoryPeriod = false;
           displayed_timestamp = performance.now();
+          
+          // Отправляем сообщение о показе стимулов
+          liveSend({
+              type: 'eye_link',
+              message: `STIMULUS_SHOWN:left${leftImageId}_right${rightImageId}`
+          });
+          
           setTimeout(() => {
-            liveSend({'image_id': image_id, 'pressed': false})
+            liveSend({
+                type: 'trial_update',
+                left_image_id: leftImageId,
+                right_image_id: rightImageId,
+                pressed: false
+            })
           }, 3000);
       }
 
@@ -55,22 +115,32 @@
         if (event.key === '1') {
           if (isRefractoryPeriod) return;
           isRefractoryPeriod = true;
+          
+          // Отправляем сообщение о нажатии клавиши
           liveSend({
-              'image_id': image_id_global,
-              'pressed': true,
-              'displayed_timestamp': displayed_timestamp,
-              'answered_timestamp': performance.now()
+              type: 'eye_link',
+              message: 'KEY_PRESSED:1'
+          });
+          
+          liveSend({
+              type: 'trial_update',
+              left_image_id: left_image_id_global,
+              right_image_id: right_image_id_global,
+              pressed: true,
+              displayed_timestamp: displayed_timestamp,
+              answered_timestamp: performance.now()
           })
         }
       });
 
       document.addEventListener('DOMContentLoaded', function (event) {
+          console.log("Page loaded, waiting for initial delay");  // Отладочное сообщение
           setTimeout(function () {
+              console.log("Initial delay finished, sending empty message");  // Отладочное сообщение
               loading.style.display = 'none';
               liveSend({});
           }, INITIAL_DELAY);
       });
   </script>
-
 
 {{ endblock }}
