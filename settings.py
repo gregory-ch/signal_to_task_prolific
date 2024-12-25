@@ -6,23 +6,34 @@ class CorsMiddleware:
         
     def __call__(self, environ, start_response):
         def custom_start_response(status, headers, exc_info=None):
-            # Получаем origin из заголовков запроса
-            origin = environ.get('HTTP_ORIGIN', '')
-            
-            # Добавляем все необходимые CORS заголовки
-            headers.extend([
-                ('Access-Control-Allow-Origin', origin or 'https://gregory-ch.github.io'),
-                ('Access-Control-Allow-Credentials', 'true'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                ('Access-Control-Allow-Headers', 'Accept, Authorization, Cache-Control, Content-Type, DNT, If-Modified-Since, Keep-Alive, Origin, User-Agent, X-Requested-With, otree-rest-key'),
-                ('Access-Control-Max-Age', '1728000'),
-            ])
-            
-            # Для OPTIONS запросов возвращаем 204 No Content
-            if environ['REQUEST_METHOD'] == 'OPTIONS':
-                return start_response('204 No Content', headers)
+            try:
+                # Конвертируем headers в list, если это tuple
+                headers = list(headers)
                 
-            return start_response(status, headers, exc_info)
+                # Получаем origin из заголовков запроса
+                origin = environ.get('HTTP_ORIGIN')
+                
+                # Добавляем CORS заголовки только если есть origin
+                if origin:
+                    cors_headers = [
+                        ('Access-Control-Allow-Origin', origin),
+                        ('Access-Control-Allow-Credentials', 'true'),
+                        ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+                        ('Access-Control-Allow-Headers', 'Accept, Authorization, Cache-Control, Content-Type, DNT, If-Modified-Since, Keep-Alive, Origin, User-Agent, X-Requested-With, otree-rest-key'),
+                        ('Access-Control-Max-Age', '1728000'),
+                    ]
+                    headers.extend(cors_headers)
+                
+                # Для OPTIONS запросов
+                if environ.get('REQUEST_METHOD') == 'OPTIONS':
+                    return start_response('204 No Content', headers)
+                    
+                return start_response(status, headers, exc_info)
+                
+            except Exception as e:
+                print(f"CORS Middleware Error: {str(e)}")  # Логируем ошибку
+                # Возвращаем оригинальный ответ без CORS заголовков в случае ошибки
+                return start_response(status, headers, exc_info)
             
         return self.app(environ, custom_start_response)
 
@@ -187,7 +198,7 @@ PARTICIPANT_FIELDS = [
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
 MIDDLEWARE = [
-    'settings.CorsMiddleware'  # Добавляем наш middleware
+    'settings.CorsMiddleware'
 ] 
  # dict(
     #     name='intergenerational',
