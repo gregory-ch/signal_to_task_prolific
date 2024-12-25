@@ -47,27 +47,24 @@ class CorsMiddleware:
         
     def __call__(self, environ, start_response):
         def custom_start_response(status, headers, exc_info=None):
-            headers = list(headers)  # Convert tuple to list if needed
+            headers = list(headers)
             
-            # Add CORS headers
+            # Получаем origin из заголовков запроса
             if environ.get('HTTP_ORIGIN'):
-                headers.append(
-                    ('Access-Control-Allow-Origin', environ['HTTP_ORIGIN'])
-                )
-            else:
-                headers.append(
-                    ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io')
-                )
-                
-            headers.append(
-                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-            )
-            headers.append(
-                ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key')
-            )
+                headers.extend([
+                    ('Access-Control-Allow-Origin', environ['HTTP_ORIGIN']),
+                    ('Access-Control-Allow-Credentials', 'true'),
+                    ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+                    ('Access-Control-Allow-Headers', 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With'),
+                ])
             
-            # Handle preflight OPTIONS request
+            # Обработка OPTIONS запроса (preflight)
             if environ['REQUEST_METHOD'] == 'OPTIONS':
+                headers.extend([
+                    ('Access-Control-Max-Age', '1728000'),
+                    ('Content-Type', 'text/plain charset=UTF-8'),
+                    ('Content-Length', '0'),
+                ])
                 return start_response('204 No Content', headers)
                 
             return start_response(status, headers, exc_info)
