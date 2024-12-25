@@ -112,20 +112,51 @@
         }
     });
 
+    // Получаем сохраненное время или используем начальное значение
+    const getInitialTime = () => {
+        const savedTime = localStorage.getItem('timeLeft');
+        const pageLoadTime = localStorage.getItem('pageLoadTime');
+        
+        if (savedTime && pageLoadTime) {
+            const timePassed = Math.floor((Date.now() - parseInt(pageLoadTime)) / 1000);
+            const remainingTime = Math.max(0, parseInt(savedTime) - timePassed);
+            return remainingTime;
+        }
+        return js_vars.timeout_seconds;
+    };
+
     // Timer functionality
-    let timeLeft = js_vars.timeout_seconds;
+    let timeLeft = getInitialTime();
     const timerDisplay = document.getElementById('timer');
+    timerDisplay.textContent = timeLeft;
+    
+    // Сохраняем начальное время загрузки страницы
+    localStorage.setItem('pageLoadTime', Date.now().toString());
     
     const timer = setInterval(() => {
         timeLeft--;
         timerDisplay.textContent = timeLeft;
         
+        // Сохраняем оставшееся время
+        localStorage.setItem('timeLeft', timeLeft.toString());
+        
         if (timeLeft <= 0) {
             clearInterval(timer);
+            // Очищаем сохраненные данные
+            localStorage.removeItem('timeLeft');
+            localStorage.removeItem('pageLoadTime');
             liveSend({type: 'timeout'});
             document.getElementById('form').submit();
         }
     }, 1000);
+
+    // Очищаем сохраненные данные при завершении
+    window.addEventListener('beforeunload', () => {
+        if (timeLeft <= 0) {
+            localStorage.removeItem('timeLeft');
+            localStorage.removeItem('pageLoadTime');
+        }
+    });
 
     // Add display for wrong attempts
     let totalWrongAttempts = js_vars.total_wrong_attempts;
