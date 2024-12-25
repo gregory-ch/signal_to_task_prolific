@@ -1,1 +1,1 @@
- 
+from otree.wsgi import application 

@@ -1,50 +1,23 @@
 from os import environ
 import sys
 import traceback
+from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.applications import Starlette
-
-# CORS settings
-CORS_ORIGIN_ALLOW_ALL = True  # Разрешаем все origins
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    "https://gregory-ch.github.io",
-    # "http://localhost:8000",
-]
-CORS_ALLOWED_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
-CORS_ALLOWED_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'otree-rest-key',
-]
 
 # Основные настройки oTree
 EXTENSION_APPS = ['otree']
 
 # CORS middleware настройки
 MIDDLEWARE = [
-    {
-        'middleware_class': CORSMiddleware,
-        'allow_origins': ['*'],
-        'allow_methods': ['*'],
-        'allow_headers': ['*'],
-        'allow_credentials': False,
-        'max_age': 1728000,
-    }
+    Middleware(
+        CORSMiddleware,
+        allow_origins=['*'],
+        allow_methods=['*'],
+        allow_headers=['*'],
+        allow_credentials=False,
+        max_age=1728000
+    )
 ]
 
 SESSION_CONFIGS = [
