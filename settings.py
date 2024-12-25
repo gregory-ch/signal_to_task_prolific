@@ -1,17 +1,30 @@
-# from os import environ
+from os import environ
 
-# class CorsMiddleware:
-#     def __init__(self, app):
-#         self.app = app
+class CorsMiddleware:
+    def __init__(self, app):
+        self.app = app
         
-#     def __call__(self, environ, start_response):
-#         def custom_start_response(status, headers, exc_info=None):
-#             headers.append(('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'))
-#             headers.append(('Access-Control-Allow-Methods', 'POST, OPTIONS'))
-#             headers.append(('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'))
-#             return start_response(status, headers, exc_info)
+    def __call__(self, environ, start_response):
+        def custom_start_response(status, headers, exc_info=None):
+            # Получаем origin из заголовков запроса
+            origin = environ.get('HTTP_ORIGIN', '')
             
-#         return self.app(environ, custom_start_response)
+            # Добавляем все необходимые CORS заголовки
+            headers.extend([
+                ('Access-Control-Allow-Origin', origin or 'https://gregory-ch.github.io'),
+                ('Access-Control-Allow-Credentials', 'true'),
+                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
+                ('Access-Control-Allow-Headers', 'Accept, Authorization, Cache-Control, Content-Type, DNT, If-Modified-Since, Keep-Alive, Origin, User-Agent, X-Requested-With, otree-rest-key'),
+                ('Access-Control-Max-Age', '1728000'),
+            ])
+            
+            # Для OPTIONS запросов возвращаем 204 No Content
+            if environ['REQUEST_METHOD'] == 'OPTIONS':
+                return start_response('204 No Content', headers)
+                
+            return start_response(status, headers, exc_info)
+            
+        return self.app(environ, custom_start_response)
 
 SESSION_CONFIGS = [
    
@@ -173,9 +186,9 @@ PARTICIPANT_FIELDS = [
 
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
-# MIDDLEWARE = [
-#     'settings.CorsMiddleware'  # Добавляем наш middleware
-# ] 
+MIDDLEWARE = [
+    'settings.CorsMiddleware'  # Добавляем наш middleware
+] 
  # dict(
     #     name='intergenerational',
     #     app_sequence=['intergenerational'],
