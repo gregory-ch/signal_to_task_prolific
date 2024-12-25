@@ -1,41 +1,49 @@
 from os import environ
+import sys
+import traceback
 
 class CorsMiddleware:
     def __init__(self, app):
         self.app = app
+        print("CorsMiddleware initialized")  # Логируем инициализацию
         
     def __call__(self, environ, start_response):
+        print("CorsMiddleware called")  # Логируем вызов middleware
+        
         def custom_start_response(status, headers, exc_info=None):
             try:
-                # Конвертируем headers в list, если это tuple
+                print("Processing request...")  # Логируем начало обработки
+                
+                # Базовый набор CORS заголовков
+                cors_headers = [
+                    ('Access-Control-Allow-Origin', '*'),  # Временно разрешаем все origins
+                    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
+                    ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
+                ]
+                
+                # Конвертируем headers в list и добавляем CORS заголовки
                 headers = list(headers)
+                headers.extend(cors_headers)
                 
-                # Получаем origin из заголовков запроса
-                origin = environ.get('HTTP_ORIGIN')
-                
-                # Добавляем CORS заголовки только если есть origin
-                if origin:
-                    cors_headers = [
-                        ('Access-Control-Allow-Origin', origin),
-                        ('Access-Control-Allow-Credentials', 'true'),
-                        ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                        ('Access-Control-Allow-Headers', 'Accept, Authorization, Cache-Control, Content-Type, DNT, If-Modified-Since, Keep-Alive, Origin, User-Agent, X-Requested-With, otree-rest-key'),
-                        ('Access-Control-Max-Age', '1728000'),
-                    ]
-                    headers.extend(cors_headers)
-                
-                # Для OPTIONS запросов
-                if environ.get('REQUEST_METHOD') == 'OPTIONS':
-                    return start_response('204 No Content', headers)
-                    
+                print(f"Headers set: {headers}")  # Логируем заголовки
                 return start_response(status, headers, exc_info)
                 
             except Exception as e:
-                print(f"CORS Middleware Error: {str(e)}")  # Логируем ошибку
-                # Возвращаем оригинальный ответ без CORS заголовков в случае ошибки
-                return start_response(status, headers, exc_info)
+                print("Error in CorsMiddleware:", str(e))  # Логируем ошибку
+                print("Traceback:", traceback.format_exc())  # Полный traceback
+                # В случае ошибки пытаемся вернуть оригинальный ответ
+                try:
+                    return start_response(status, list(headers), exc_info)
+                except:
+                    print("Critical error in fallback response")
+                    return start_response('500 Internal Server Error', [('Content-Type', 'text/plain')])
             
-        return self.app(environ, custom_start_response)
+        try:
+            return self.app(environ, custom_start_response)
+        except Exception as e:
+            print("Error in middleware app call:", str(e))
+            print("Traceback:", traceback.format_exc())
+            return [b'Internal Server Error']
 
 SESSION_CONFIGS = [
    
@@ -197,9 +205,10 @@ PARTICIPANT_FIELDS = [
 
 SESSION_FIELDS = ['finished_p1_list', 'iowa_costs', 'wisconsin', 'intergenerational_history']
 
-MIDDLEWARE = [
-    'settings.CorsMiddleware'
-] 
+# Временно закомментируем middleware для теста
+# MIDDLEWARE = [
+#     'settings.CorsMiddleware'
+# ] 
  # dict(
     #     name='intergenerational',
     #     app_sequence=['intergenerational'],
