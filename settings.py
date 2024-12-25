@@ -2,48 +2,77 @@ from os import environ
 import sys
 import traceback
 
+# CORS settings
+CORS_ORIGIN_ALLOW_ALL = True  # Разрешаем все origins
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://gregory-ch.github.io",
+    "http://localhost:8000",
+]
+CORS_ALLOWED_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'otree-rest-key',
+]
+
+# Добавляем corsheaders в INSTALLED_APPS
+INSTALLED_APPS = [
+    'otree',
+    'corsheaders',
+]
+
+# Добавляем CorsMiddleware в начало MIDDLEWARE
+MIDDLEWARE = [
+    'settings.CorsMiddleware'
+]
+
 class CorsMiddleware:
     def __init__(self, app):
         self.app = app
-        print("CorsMiddleware initialized")  # Логируем инициализацию
         
     def __call__(self, environ, start_response):
-        print("CorsMiddleware called")  # Логируем вызов middleware
-        
         def custom_start_response(status, headers, exc_info=None):
-            try:
-                print("Processing request...")  # Логируем начало обработки
-                
-                # Базовый набор CORS заголовков
-                cors_headers = [
-                    ('Access-Control-Allow-Origin', '*'),  # Временно разрешаем все origins
-                    ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS'),
-                    ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key'),
-                ]
-                
-                # Конвертируем headers в list и добавляем CORS заголовки
-                headers = list(headers)
-                headers.extend(cors_headers)
-                
-                print(f"Headers set: {headers}")  # Логируем заголовки
-                return start_response(status, headers, exc_info)
-                
-            except Exception as e:
-                print("Error in CorsMiddleware:", str(e))  # Логируем ошибку
-                print("Traceback:", traceback.format_exc())  # Полный traceback
-                # В случае ошибки пытаемся вернуть оригинальный ответ
-                try:
-                    return start_response(status, list(headers), exc_info)
-                except:
-                    print("Critical error in fallback response")
-                    return start_response('500 Internal Server Error', [('Content-Type', 'text/plain')])
+            headers = list(headers)  # Convert tuple to list if needed
             
-        try:
-            return self.app(environ, custom_start_response)
-        except Exception as e:
-            print("Error in middleware app call:", str(e))
-            print("Traceback:", traceback.format_exc())
-            return [b'Internal Server Error']
+            # Add CORS headers
+            if environ.get('HTTP_ORIGIN'):
+                headers.append(
+                    ('Access-Control-Allow-Origin', environ['HTTP_ORIGIN'])
+                )
+            else:
+                headers.append(
+                    ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io')
+                )
+                
+            headers.append(
+                ('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+            )
+            headers.append(
+                ('Access-Control-Allow-Headers', 'Content-Type, otree-rest-key')
+            )
+            
+            # Handle preflight OPTIONS request
+            if environ['REQUEST_METHOD'] == 'OPTIONS':
+                return start_response('204 No Content', headers)
+                
+            return start_response(status, headers, exc_info)
+            
+        return self.app(environ, custom_start_response)
 
 SESSION_CONFIGS = [
    
@@ -184,9 +213,6 @@ ROOMS = [
     ),
     dict(name='live_demo', display_name='Room for live demo (no participant labels)'),
 ]
-
-# if an app is included in SESSION_CONFIGS, you don't need to list it here
-INSTALLED_APPS = ['otree']
 
 PARTICIPANT_FIELDS = [
     'booking_time',
