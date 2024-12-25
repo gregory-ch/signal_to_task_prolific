@@ -1,6 +1,8 @@
 from os import environ
 import sys
 import traceback
+from starlette.middleware.cors import CORSMiddleware
+from starlette.applications import Starlette
 
 # CORS settings
 CORS_ORIGIN_ALLOW_ALL = True  # Разрешаем все origins
@@ -30,45 +32,20 @@ CORS_ALLOWED_HEADERS = [
     'otree-rest-key',
 ]
 
-# Добавляем corsheaders в INSTALLED_APPS
-INSTALLED_APPS = [
-    'otree',
-    'corsheaders',
-]
+# Основные настройки oTree
+EXTENSION_APPS = ['otree']
 
-# Добавляем CorsMiddleware в начало MIDDLEWARE
+# CORS middleware настройки
 MIDDLEWARE = [
-    'settings.CorsMiddleware'
+    {
+        'middleware_class': CORSMiddleware,
+        'allow_origins': ['*'],
+        'allow_methods': ['*'],
+        'allow_headers': ['*'],
+        'allow_credentials': False,
+        'max_age': 1728000,
+    }
 ]
-
-class CorsMiddleware:
-    def __init__(self, app):
-        self.app = app
-        
-    def __call__(self, environ, start_response):
-        def custom_start_response(status, headers, exc_info=None):
-            headers = list(headers)
-            
-            # Добавляем CORS заголовки для всех запросов
-            headers.extend([
-                ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),  # Фиксированный origin
-                ('Access-Control-Allow-Credentials', 'true'),
-                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD'),  # Добавлен HEAD
-                ('Access-Control-Allow-Headers', 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With'),
-            ])
-            
-            # Специальная обработка для OPTIONS и HEAD запросов
-            if environ['REQUEST_METHOD'] in ['OPTIONS', 'HEAD']:
-                headers.extend([
-                    ('Access-Control-Max-Age', '1728000'),
-                    ('Content-Type', 'text/plain charset=UTF-8'),
-                    ('Content-Length', '0'),
-                ])
-                return start_response('204 No Content', headers)
-                
-            return start_response(status, headers, exc_info)
-            
-        return self.app(environ, custom_start_response)
 
 SESSION_CONFIGS = [
    
