@@ -7,7 +7,7 @@ CORS_ORIGIN_ALLOW_ALL = True  # Разрешаем все origins
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "https://gregory-ch.github.io",
-    "http://localhost:8000",
+    # "http://localhost:8000",
 ]
 CORS_ALLOWED_METHODS = [
     'DELETE',
@@ -49,17 +49,16 @@ class CorsMiddleware:
         def custom_start_response(status, headers, exc_info=None):
             headers = list(headers)
             
-            # Получаем origin из заголовков запроса
-            if environ.get('HTTP_ORIGIN'):
-                headers.extend([
-                    ('Access-Control-Allow-Origin', environ['HTTP_ORIGIN']),
-                    ('Access-Control-Allow-Credentials', 'true'),
-                    ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'),
-                    ('Access-Control-Allow-Headers', 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With'),
-                ])
+            # Добавляем CORS заголовки для всех запросов
+            headers.extend([
+                ('Access-Control-Allow-Origin', 'https://gregory-ch.github.io'),  # Фиксированный origin
+                ('Access-Control-Allow-Credentials', 'true'),
+                ('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD'),  # Добавлен HEAD
+                ('Access-Control-Allow-Headers', 'Accept,Authorization,Cache-Control,Content-Type,DNT,If-Modified-Since,Keep-Alive,Origin,User-Agent,X-Requested-With'),
+            ])
             
-            # Обработка OPTIONS запроса (preflight)
-            if environ['REQUEST_METHOD'] == 'OPTIONS':
+            # Специальная обработка для OPTIONS и HEAD запросов
+            if environ['REQUEST_METHOD'] in ['OPTIONS', 'HEAD']:
                 headers.extend([
                     ('Access-Control-Max-Age', '1728000'),
                     ('Content-Type', 'text/plain charset=UTF-8'),
