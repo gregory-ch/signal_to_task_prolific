@@ -1,41 +1,41 @@
-from os import environ
-import sys
-import traceback
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
-from starlette.applications import Starlette
+# from os import environ
+# import sys
+# import traceback
+# from starlette.middleware import Middleware
+# from starlette.middleware.cors import CORSMiddleware
+# from starlette.applications import Starlette
 
-# Основные настройки oTree
-EXTENSION_APPS = ['otree']
+# # Основные настройки oTree
+# EXTENSION_APPS = ['otree']
 
-# CORS middleware настройки
-MIDDLEWARE = [
-    Middleware(
-        CORSMiddleware,
-        allow_origins=['*'],
-        allow_methods=['*'],
-        allow_headers=['*'],
-        allow_credentials=False,
-        max_age=1728000
-    )
-]
+# # CORS middleware настройки
+# MIDDLEWARE = [
+#     Middleware(
+#         CORSMiddleware,
+#         allow_origins=['*'],
+#         allow_methods=['*'],
+#         allow_headers=['*'],
+#         allow_credentials=False,
+#         max_age=1728000
+#     )
+# ]
 
 SESSION_CONFIGS = [
    
     # ),
-    dict(
-        name='rockpaperscissors',
-        display_name="Rock/Paper/Scissors against Robot",
-        app_sequence=['rockpaperscissors'],
-        num_demo_participants=1,
-    ),
+    # dict(
+    #     name='rockpaperscissors',
+    #     display_name="Rock/Paper/Scissors against Robot",
+    #     app_sequence=['rockpaperscissors'],
+    #     num_demo_participants=1,
+    # ),
 
-    dict(
-        name='data_to_dgp',
-        display_name="data to DGP demo",
-        app_sequence=['data_to_dgp', ],
-        num_demo_participants=1,
-    ),
+    # dict(
+    #     name='data_to_dgp',
+    #     display_name="data to DGP demo",
+    #     app_sequence=['data_to_dgp', ],
+    #     num_demo_participants=1,
+    # ),
 
     # dict(
     #     name='data_to_dgp_quiz',
@@ -44,20 +44,20 @@ SESSION_CONFIGS = [
     #     num_demo_participants=1,
     # ),
 
-    dict(
-        name='data_to_dgp_eng',
-        display_name="data to DGP ENG",
-        app_sequence=['consent', 'quizeng', 'data_to_dgp', "survey_eng"],
-        num_demo_participants=2,
-    ),
+    # dict(
+    #     name='data_to_dgp_eng',
+    #     display_name="data to DGP ENG",
+    #     app_sequence=['consent', 'quizeng', 'data_to_dgp', "survey_eng"],
+    #     num_demo_participants=2,
+    # ),
 
-    dict(
-        name='AOT',
-        display_name="trains with oth",
-        app_sequence=['trains',  'MPL', 'bret', 'payment_info'],
-        num_demo_participants=1,
+    # dict(
+    #     name='AOT',
+    #     display_name="trains with oth",
+    #     app_sequence=['trains',  'MPL', 'bret', 'payment_info'],
+    #     num_demo_participants=1,
 
-    ),
+    # ),
 
     
     # dict(
@@ -85,24 +85,24 @@ SESSION_CONFIGS = [
         num_demo_participants=1,
     ),
 
-    dict(
-        name='data_to_dgp_new_design_inverse',
-        display_name="data to DGP Inverse",
-        app_sequence=["quiz_inverse_rus", "data_to_dgp_new", "survey_eng"],
-        num_demo_participants=1,
-    ),
+    # dict(
+    #     name='data_to_dgp_new_design_inverse',
+    #     display_name="data to DGP Inverse",
+    #     app_sequence=["quiz_inverse_rus", "data_to_dgp_new", "survey_eng"],
+    #     num_demo_participants=1,
+    # ),
         dict(
         name='cursor2',
         display_name="cursor2",
         app_sequence=["cursor2"],
         num_demo_participants=1,
     ),
-      dict(
-        name='go_no_go',
-        display_name='Attention test (Go/No-Go)',
-        app_sequence=['go_no_go'],
-        num_demo_participants=1,
-    ),
+    #   dict(
+    #     name='go_no_go',
+    #     display_name='Attention test (Go/No-Go)',
+    #     app_sequence=['go_no_go'],
+    #     num_demo_participants=1,
+    # ),
 
     # dict(
     #     name='any_app', 
