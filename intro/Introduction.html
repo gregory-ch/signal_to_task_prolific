@@ -1,0 +1,67 @@
+{{ block title }}
+    Welcome to the Study
+{{ endblock }}
+
+{{ block content }}
+<div class="container">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title mb-4">Important Information</h4>
+
+            <div class="study-info mb-4">
+                <h5>Study Duration and Structure</h5>
+                <p>This study should take no more than 20 minutes to complete. You will be presented with 12 tasks in total:
+                6 tasks of one type and 6 tasks of another type. Each section will have its own set of instructions.</p>
+            </div>
+
+            <div class="compensation-info mb-4">
+                <h5>Base Compensation</h5>
+                <p>To receive the base compensation, you must:</p>
+                <ul>
+                    <li>Complete all tasks</li>
+                    <li>Reach the final page</li>
+                    <li>Return to Prolific</li>
+                </ul>
+                <p>Once these steps are completed, you will receive a £2 bonus payment.</p>
+            </div>
+
+            <div class="bonus-info">
+                <h5>Additional Bonuses</h5>
+                <p>You can earn up to £6 in additional bonuses based on your performance. The specific bonus criteria will be:
+                <ul>
+                    <li>Explained in detail before each section</li>
+                    <li>Based on your decisions during the tasks</li>
+                    <li>Paid within 24 hours after study completion</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .card-body {
+        padding: 2rem;
+    }
+    h5 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+    ul {
+        padding-left: 20px;
+    }
+    li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+{{ next_button }}
+{{ endblock }} 

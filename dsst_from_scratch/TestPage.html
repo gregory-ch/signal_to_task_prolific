@@ -1,0 +1,78 @@
+{{ block title }}
+    {% if player.round_number == 1 %}
+        Test Task - Practice Round
+    {% else %}
+       <b>Not</b> a practice round, submited results will be saved
+    {% endif %}
+{{ endblock }}
+
+{{ block content }}
+<div class="container">
+    <!-- Info cards container -->
+    <div class="info-cards">
+        <!-- Round and Timer display -->
+        <div class="info-card">
+            <div class="round-display">Round {{ player.round_number }} of {{ C.NUM_ROUNDS }}</div>
+            <div class="timer-display">Time remaining: <span id="timer">{{ C.TIMEOUT_SECONDS }}</span></div>
+        </div>
+
+        <!-- Warning card -->
+        {% if round_type == 'c' %}
+        <div class="info-card warning-high">
+            Task difficulty is likely high
+        </div>
+        {% elif round_type == 's' %}
+        <div class="info-card warning-low">
+            Task difficulty is likely low
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main game card remains unchanged -->
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="outer-card">
+                <!-- ... rest of the game card content ... -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Info cards styles */
+.info-cards {
+    max-width: 600px;
+    margin: 0 auto 20px auto;
+}
+
+.info-card {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    text-align: center;
+    font-size: 18px;
+}
+
+.warning-high {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+    color: #856404;
+}
+
+.warning-low {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+.round-display, .timer-display {
+    display: inline-block;
+    margin: 0 15px;
+}
+
+/* Rest of the styles remain unchanged */
+</style>
+
+<!-- Rest of the code remains unchanged --> 

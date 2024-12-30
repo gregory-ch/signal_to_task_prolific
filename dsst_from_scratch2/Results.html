@@ -1,5 +1,5 @@
 {{ block title }}
-    Results
+    Final Results
 {{ endblock }}
 
 {{ block content }}
@@ -13,9 +13,10 @@
                     <tr>
                         <th>Round</th>
                         <th>Difficulty</th>
-                        <th>Time (seconds)</th>
-                        <th>Correct Solution</th>
-                        <th>All Numbers Used</th>
+                        <th>Correct Matches</th>
+                        <th>Wrong Attempts</th>
+                        <th>Effective Score</th>
+                        <th>Target Score</th>
                         <th>Bonus Earned</th>
                     </tr>
                 </thead>
@@ -24,9 +25,10 @@
                     <tr>
                         <td>{{ round.round_number }}</td>
                         <td>{{ round.difficulty }}</td>
-                        <td>{{ round.time_taken }}</td>
-                        <td>{% if round.is_correct %}Yes{% else %}No{% endif %}</td>
-                        <td>{% if round.all_used %}Yes{% else %}No{% endif %}</td>
+                        <td>{{ round.correct_matches }}</td>
+                        <td>{{ round.wrong_attempts }}</td>
+                        <td>{{ round.effective_score }}</td>
+                        <td>{{ round.computer_threshold }}</td>
                         <td>£{{ round.bonus }}</td>
                     </tr>
                     {% endfor %}
@@ -36,21 +38,25 @@
 
         <div class="total-bonus mt-4">
             <h5>Total Bonus Earned: £{{ total_bonus }}</h5>
+            <p class="text-muted">
+                (Maximum possible: £{{ bonus_high }} for each high difficulty task and 
+                £{{ bonus_low }} for each low difficulty task)
+            </p>
         </div>
     </div>
 </div>
 
 <style>
 .container {
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 20px;
 }
 
 .outer-card {
     background-color: #f8f9fa;
     border-radius: 8px;
     padding: 20px;
+    margin-bottom: 20px;
 }
 
 .results-table {
@@ -85,16 +91,9 @@
     border-radius: 4px;
 }
 
-.text-center {
-    text-align: center;
-}
-
-.mb-4 {
-    margin-bottom: 1.5rem;
-}
-
-.mt-4 {
-    margin-top: 1.5rem;
+.text-muted {
+    color: #6c757d;
+    font-size: 0.9em;
 }
 </style>
 

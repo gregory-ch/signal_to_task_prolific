@@ -92,6 +92,13 @@ SESSION_CONFIGS = [
     #     num_demo_participants=1,
     # ),
         dict(
+        name='prolific_study',
+        display_name="prolific",
+        app_sequence=["consent", "intro", "dsst_from_scratch",  "cursor2", "dsst_from_scratch2", 'end'],
+        context="prolific",
+        num_demo_participants=1,
+    ),
+        dict(
         name='cursor2',
         display_name="cursor2",
         app_sequence=["cursor2"],
@@ -152,10 +159,16 @@ DEMO_PAGE_TITLE = "Behavecon 2023 Hse "
 SECRET_KEY = '4387860144726'
 
 ROOMS = [
+    # dict(
+    #     name='econ101',
+    #     display_name='Econ 101 class',
+    #     participant_label_file='_rooms/econ101.txt',
+    # ),
     dict(
-        name='econ101',
-        display_name='Econ 101 class',
-        participant_label_file='_rooms/econ101.txt',
+        name='prolific',
+        display_name='prolific_study',
+        # participant_label_file='_rooms/your_study.txt',
+        # use_secure_urls=True,
     ),
     dict(name='live_demo', display_name='Room for live demo (no participant labels)'),
 ]
