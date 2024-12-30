@@ -14,7 +14,20 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = None
     NUM_ROUNDS = 7
     DEMO_MODE = False
-    TIMEOUT_SECONDS = 60  # 1.5 минуты
+    TIMEOUT_SECONDS = 90  # 1.5 минуты
+    
+    # Бонусы для разных уровней сложности и временных интервалов
+    BONUS_HIGH = {
+        30: 0.80,  # до 30 секунд
+        60: 0.60,  # до 60 секунд
+        90: 0.40   # до 90 секунд
+    }
+    
+    BONUS_LOW = {
+        30: 0.40,  # до 30 секунд
+        60: 0.30,  # до 60 секунд
+        90: 0.20   # до 90 секунд
+    }
     
     # Образцы задач
     SIMPLE_SAMPLE = [
@@ -83,11 +96,11 @@ class C(BaseConstants):
 
 def creating_session(subsession):
     if subsession.round_number == 1:
-        # Копируем списки для безопасной работы
-        simple_tasks = C.SIMPLE_SAMPLE.copy()
-        hard_tasks = C.HARD_SAMPLE.copy()
-        
         for p in subsession.get_players():
+            # Создаем копии списков для каждого игрока
+            simple_tasks = C.SIMPLE_SAMPLE.copy()
+            hard_tasks = C.HARD_SAMPLE.copy()
+            
             # Определяем, какой тип задач идет первым
             p.participant.first_set_type = random.choice(['simple', 'hard'])
             
@@ -126,8 +139,8 @@ def creating_session(subsession):
             # Сохраняем информацию
             p.participant.tasks = all_tasks
             p.participant.swapped_positions = [swapped_round, second_swapped_round]
-            print(f"Player {p.id_in_group} tasks:", all_tasks)
-            print(f"Swapped position {swap_position}, rounds {swapped_round} and {second_swapped_round}")
+            # print(f"Player {p.id_in_group} tasks:", all_tasks)
+            # print(f"Swapped position {swap_position}, rounds {swapped_round} and {second_swapped_round}")
 
     # Устанавливаем задачу для текущего раунда
     for player in subsession.get_players():
@@ -158,7 +171,10 @@ class Player(BasePlayer):
     solving_time = models.IntegerField()
     task_source = models.StringField()  # 'simple', 'hard', или 'training'
     is_swapped = models.BooleanField()  # был ли этот раунд обменен местами
-    swap_position = models.IntegerField(blank=True)  # какая позиция была обменена (0, 1 или 2)
+    swap_position = models.IntegerField(blank=True)  # какая позиция была обменена
+    action_history = models.LongStringField(initial='', blank=True)
+    bonus = models.FloatField(initial=0)  # бонус за текущий раунд
+    total_bonus = models.FloatField(initial=0)  # общий бонус за все раунды
 
 
 
@@ -167,21 +183,41 @@ class Player(BasePlayer):
 # PAGES
 class calculator(Page):
     form_model = 'player'
-    form_fields = ['result', 'is_correct', 'all_used', 'solving_time']
+    form_fields = ['result', 'is_correct', 'all_used', 'solving_time', 'action_history']
     timeout_seconds = C.TIMEOUT_SECONDS
 
     @staticmethod
     def before_next_page(player, timeout_happened):
-        print("Form data received:")
-        print("result:", player.result)
-        print("is_correct:", player.is_correct)
-        print("all_used:", player.all_used)
-        print("timeout_happened:", timeout_happened)
-
         if timeout_happened:
             player.is_correct = False
             player.all_used = False
             player.result = 0
+            player.bonus = 0
+        else:
+            # Расчет бонуса на основе времени и сложности
+            if player.is_correct and player.all_used:
+                if player.task_source == 'hard':
+                    if player.solving_time <= 30:
+                        player.bonus = C.BONUS_HIGH[30]
+                    elif player.solving_time <= 60:
+                        player.bonus = C.BONUS_HIGH[60]
+                    elif player.solving_time <= 90:
+                        player.bonus = C.BONUS_HIGH[90]
+                    else:
+                        player.bonus = 0
+                elif player.task_source == 'simple':
+                    if player.solving_time <= 30:
+                        player.bonus = C.BONUS_LOW[30]
+                    elif player.solving_time <= 60:
+                        player.bonus = C.BONUS_LOW[60]
+                    elif player.solving_time <= 90:
+                        player.bonus = C.BONUS_LOW[90]
+                    else:
+                        player.bonus = 0
+                else:  # training
+                    player.bonus = 0
+            else:
+                player.bonus = 0
 
     @staticmethod
     def vars_for_template(player):
@@ -217,16 +253,19 @@ class calculator(Page):
 
     @staticmethod
     def live_method(player, data):
-        if data.get('type') == 'save_time':
-            player.participant.vars['time_left'] = data['time_left']
-            return
+        data_type = data.get('type')
         
-    @staticmethod
-    def before_next_page(player, timeout_happened):
-        print("Before next page:")
-        print("is_correct:", player.is_correct)
-        print("result:", player.result)
-        print("all_used:", player.all_used)
+        if data_type == 'save_time':
+            player.participant.vars['time_left'] = data['time_left']
+
+    # @staticmethod
+    # def before_next_page(player, timeout_happened):
+    #     print("Before next page:")
+    #     print("is_correct:", player.is_correct)
+    #     print("result:", player.result)
+    #     print("all_used:", player.all_used)
+
+
 
 
 class ReadyPage(Page):
@@ -255,7 +294,50 @@ class Instructions(Page):
 class Instructions2(Page):
     @staticmethod
     def is_displayed(player):
-        return player.round_number == 2  # Показываем только перед вторым раундом
+        return player.round_number == 1  # Показываем только перед вторым раундом
 
 
-page_sequence = [Instructions, ReadyPage, Instructions2, calculator]
+class Results(Page):
+    @staticmethod
+    def is_displayed(player):
+        return player.round_number == C.NUM_ROUNDS
+
+    @staticmethod
+    def before_next_page(player, timeout_happened):
+        # Подсчитываем общий бонус перед переходом на следующую страницу
+        all_rounds = player.in_all_rounds()
+        total_bonus = sum(round.bonus for round in all_rounds if round.task_source != 'training')
+        player.total_bonus = total_bonus
+
+    @staticmethod
+    def vars_for_template(player):
+        # Собираем данные для отображения
+        all_rounds = player.in_all_rounds()
+        rounds_data = []
+        total_bonus = sum(round.bonus for round in all_rounds if round.task_source != 'training')
+        
+        for round in all_rounds:
+            if round.task_source != 'training':
+                round_data = {
+                    'round_number': round.round_number,
+                    'difficulty': 'High' if round.task_source == 'hard' else 'Low',
+                    'time_taken': round.solving_time,
+                    'is_correct': round.is_correct,
+                    'all_used': round.all_used,
+                    'bonus': round.bonus,
+                }
+                rounds_data.append(round_data)
+
+        return {
+            'rounds_data': rounds_data,
+            'total_bonus': total_bonus  # Используем только что подсчитанное значение
+        }
+
+    @staticmethod
+    def app_after_this_page(player, upcoming_apps):
+        if player.participant.vars['X'] == 0:
+            return 'end'
+        else:
+            return 'dsst_from_scratch2'
+
+page_sequence = [Instructions, Instructions2, ReadyPage, calculator, Results]

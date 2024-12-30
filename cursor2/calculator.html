@@ -184,6 +184,7 @@
         <input type="hidden" name="is_correct" id="id_is_correct">
         <input type="hidden" name="all_used" id="id_all_used">
         <input type="hidden" name="solving_time" id="id_solving_time">
+        <input type="hidden" name="action_history" id="id_action_history">
         {{ next_button }}
     </form>
 </div>
@@ -227,6 +228,12 @@
         let selectedElement = null;
         let history = [];
         let historyIndex = -1;
+        let actionHistory = '';
+
+        function logAction(action) {
+            actionHistory += (actionHistory ? '\n' : '') + action;
+            console.log('Action:', action);
+        }
 
         // Initialize numbers from js_vars
         $('.number-grid').empty();
@@ -236,7 +243,6 @@
 
         $('.number').click(function() {
             if ($(this).hasClass('selected') || $(this).is(':hidden')) {
-                // Если кнопка уже выбрана или скрыта, ничего не делаем
                 return;
             }
 
@@ -245,10 +251,13 @@
                 $(this).addClass('selected');
                 selectedNumber = $(this).data('value');
                 selectedElement = $(this);
+                logAction(`NUM ${selectedNumber}`);
             } else {
                 let firstNumber = selectedNumber;
                 let secondNumber = $(this).data('value');
                 let result = calculate(firstNumber, secondNumber, selectedOperation);
+                
+                logAction(`CALC ${firstNumber}${selectedOperation}${secondNumber}=${result}`);
                 
                 $(this).text(result);
                 $(this).data('value', result);
@@ -295,18 +304,20 @@
         $('.operation').click(function() {
             if (selectedNumber === null) return;
             if ($(this).hasClass('selected')) {
-                // Если операция уже выбрана, снимаем выбор
                 $(this).removeClass('selected');
                 selectedOperation = null;
+                logAction('OP CANCEL');
             } else {
                 $('.operation').removeClass('selected');
                 $(this).addClass('selected');
                 selectedOperation = $(this).data('op');
+                logAction(`OP ${selectedOperation}`);
             }
         });
 
         $('#undo').click(function() {
             if (historyIndex > -1) {
+                logAction('UNDO');
                 let state = history[historyIndex];
                 $('.number').eq(state.hiddenIndex).show().text(state.firstNumber).data('value', state.firstNumber);
                 $('.number').eq(state.resultIndex).removeClass('result result-24');
@@ -317,6 +328,7 @@
 
         $('#redo').click(function() {
             if (historyIndex < history.length - 1) {
+                logAction('REDO');
                 historyIndex++;
                 let state = history[historyIndex];
                 $('.number').eq(state.hiddenIndex).hide();
@@ -352,13 +364,15 @@
             $('#id_result').val(finalResult);
             $('#id_is_correct').val(Math.abs(finalResult - 24) < 0.0001 ? 1 : 0);
             $('#id_all_used').val(allUsed ? 1 : 0);
-            $('#id_solving_time').val(solving_time);  // Сохраняем время решения
+            $('#id_solving_time').val(solving_time);
+            $('#id_action_history').val(actionHistory);
             
             console.log('Form values before submit:', {
                 result: $('#id_result').val(),
                 is_correct: $('#id_is_correct').val(),
                 all_used: $('#id_all_used').val(),
-                solving_time: $('#id_solving_time').val()
+                solving_time: $('#id_solving_time').val(),
+                action_history: actionHistory
             });
         }
 
@@ -400,6 +414,7 @@
 
         // Обновляем обработчик кнопки submit
         $('#submit-button').click(function() {
+            logAction('SUBMIT');
             checkResult();  // Проверяем результат перед отправкой
             $('#form').submit();
         });
@@ -426,23 +441,31 @@
         }
 
         function applyHistory() {
+            // Сначала восстанавливаем начальное состояние
             $('.number').each(function(index) {
-                if (historyIndex === -1) {
-                    $(this).text(initialNumbers[index]).data('value', initialNumbers[index]).show().removeClass('result result-24');
-                } else {
-                    for (let i = 0; i <= historyIndex; i++) {
-                        let state = history[i];
-                        if (index === state.hiddenIndex) {
-                            $(this).hide();
-                        } else if (index === state.resultIndex) {
-                            $(this).text(state.result).data('value', state.result).show()
-                                .removeClass('result result-24')
-                                .addClass(state.result === 24 ? 'result-24' : 'result');
-                        }
-                    }
-                }
+                $(this).text(initialNumbers[index])
+                    .data('value', initialNumbers[index])
+                    .show()
+                    .removeClass('result result-24');
             });
-            // Check if only one button is left after applying history
+
+            // Затем применяем все операции до текущего индекса
+            if (historyIndex >= 0) {
+                for (let i = 0; i <= historyIndex; i++) {
+                    let state = history[i];
+                    // Скрываем использованное число
+                    $('.number').eq(state.hiddenIndex).hide();
+                    // Обновляем результат операции
+                    $('.number').eq(state.resultIndex)
+                        .text(state.result)
+                        .data('value', state.result)
+                        .show()
+                        .removeClass('result result-24')
+                        .addClass(state.result === 24 ? 'result-24' : 'result');
+                }
+            }
+
+            // Проверяем состояние кнопки submit
             if ($('.number:visible').length === 1) {
                 $('#id_result').val($('.number:visible').first().data('value'));
                 $('#submit-button').show();

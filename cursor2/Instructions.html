@@ -4,28 +4,72 @@
 
 {{ block content }}
 <div class="container">
-    <div class="info-cards">
-        <div class="info-card">
-            <div class="info-content">
-                <span>Practice Round</span>
+    <div class="outer-card mb-4">
+        <h4 class="text-center mb-4">Number Task Instructions</h4>
+        
+        <div class="instructions-text">
+
+            <p>You will complete 6 tasks of this type.</p>
+            <p>For each task, you will be given four numbers and need to reach a target value of <b>24</b> using:</p>
+            <ul>
+                <li>Basic arithmetic operations (+, -, ×, ÷)</li>
+                <li>Each number exactly once</li>
+            </ul>
+        </div>
+
+        <!-- Calculator Demo -->
+        <div class="calculator-demo mt-4">
+            <h5>Interface example</h5>
+            <div class="demo-calculator">
+                <!-- Numbers display -->
+                <div class="numbers-display">
+                    <div class="numbers-grid">
+                        <div class="number-row">
+                            <div class="number-box">2</div>
+                            <div class="number-box">4</div>
+                        </div>
+                        <div class="number-row">
+                            <div class="number-box">8</div>
+                            <div class="number-box">10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Calculator buttons -->
+                <div class="calculator-buttons">
+                    <div class="button-row">
+                        <button class="calc-btn" disabled>+</button>
+                        <button class="calc-btn" disabled>-</button>
+                        <button class="calc-btn" disabled>×</button>
+                        <button class="calc-btn" disabled>÷</button>
+                    </div>
+                </div>
+
+                <div class="result-display">
+                    Example: 10 × 4 - 8 x 2 = 24
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="outer-card">
-        <h4 class="mb-4">How to Play:</h4>
-        <div class="instructions-text">
-            <p>Your goal is to make 24 using all four numbers and basic arithmetic operations (+, -, ×, ÷).</p>
-            <p>For example, if you have numbers 2, 3, 4, and 5, you could do:</p>
-            <p>(5 × 4) + (3 × 2) = 26</p>
-            <p>You must:</p>
+        <!-- Important Rules -->
+        <div class="rules-section mt-4">
+            <h5>Important:</h5>
             <ul>
+                <li>You have {{ C.TIMEOUT_SECONDS }} seconds for each task</li>
+                <li>The task will automatically submit when time runs out</li>
+                <li>Click "Submit" when you've reached 24 to move to the next task</li>
                 <li>Use each number exactly once</li>
-                <li>Use only the provided operations</li>
-                <li>Make exactly 24</li>
+                <li>Your will be provided with a test task to familiarize yourself with the interface</li>
             </ul>
-            <p>You will have {{ C.TIMEOUT_SECONDS }} seconds for each round.</p>
-            <p>The first round is a practice round.</p>
+        </div>
+
+        <!-- Example with Timer -->
+        <div class="timer-demo mt-4">
+            <h5>Timer Example:</h5>
+            <div class="result-display">
+                Time remaining: {{ C.TIMEOUT_SECONDS }} seconds
+            </div>
+            <p class="mt-2">The timer will count down from {{ C.TIMEOUT_SECONDS }} seconds. When it reaches 0, your current answer will be submitted automatically.</p>
         </div>
     </div>
 </div>
@@ -36,56 +80,107 @@
     margin: 0 auto;
 }
 
-.info-cards {
-    width: 600px;
-    margin: 0 auto 20px auto;
-}
-
-.info-card {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 10px;
-    text-align: center;
-}
-
-.info-content {
-    display: flex;
-    justify-content: center;
-    font-size: 18px;
-    padding: 0 20px;
-}
-
 .outer-card {
-    width: 600px;
-    margin: 0 auto;
     background-color: #f8f9fa;
     border-radius: 8px;
     padding: 20px;
 }
 
 .instructions-text {
-    text-align: center;
     font-size: 18px;
     line-height: 1.6;
 }
 
-.instructions-text ul {
-    list-style-type: none;
-    padding: 0;
+.calculator-demo {
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+.numbers-display {
+    margin-bottom: 20px;
+}
+
+.numbers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+.number-row {
+    display: flex;
+    gap: 10px;
+}
+
+.number-box {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #007bff;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    background-color: #f8f9fa;
+}
+
+.calculator-buttons {
     margin: 20px 0;
 }
 
-.instructions-text li {
-    margin: 10px 0;
-    color: #212529;
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
 }
 
-.instructions-text p {
-    margin-bottom: 15px;
-    color: #212529;
+.calc-btn {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    font-size: 24px;
+    cursor: not-allowed;
 }
+
+.result-display {
+    text-align: center;
+    font-size: 20px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+    margin-top: 20px;
+}
+
+.rules-section {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.timer-demo {
+    background-color: #e9ecef;
+    border-radius: 4px;
+    padding: 15px;
+}
+
+.timer-display {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    color: #dc3545;
+}
+
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 1rem; }
+.mt-4 { margin-top: 1.5rem; }
+.mb-4 { margin-bottom: 1.5rem; }
 </style>
 
 {{ next_button }}
