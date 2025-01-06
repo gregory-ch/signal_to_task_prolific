@@ -326,7 +326,13 @@
 </style>
 
 <form id="form" style="display: none;">
-    {{ next_button }}
+    {% if session.config.test_mode == 1 %}
+        {{ next_button }}
+    {% else %}
+        <div id="next-button-container" style="display: none;">
+            {{ next_button }}
+        </div>
+    {% endif %}
 </form>
 
 <!-- Optional: Add a hidden field to store the final count -->

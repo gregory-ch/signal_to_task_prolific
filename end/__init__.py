@@ -28,9 +28,44 @@ class Group(BaseGroup):
 class Player(BasePlayer):
     participation_fee = models.CurrencyField()
     prolific_id = models.StringField(default=str(" "))
+    
+    # Survey fields
+    validation_word = models.StringField(
+        label="Please type the word 'validated' below to confirm you are a human participant:",
+        blank=False
+    )
+    
+    age = models.IntegerField(
+        label="What is your age?",
+        min=18,
+        max=100,
+        blank=False
+    )
+    
+    gender = models.StringField(
+        label="What is your gender?",
+        choices=[
+            'Male',
+            'Female',
+            'Other',
+            'Prefer not to say'
+        ],
+        blank=False
+    )
+    
+    feedback = models.LongStringField(
+        label="Please share any feedback about the tasks or describe the strategies you used (optional):",
+        blank=True
+    )
 
-             
+class Survey(Page):
+    form_model = 'player'
+    form_fields = ['validation_word', 'age', 'gender', 'feedback']
 
+    @staticmethod
+    def error_message(player, values):
+        if values['validation_word'].lower() != 'validated':
+            return 'Please type exactly the word "validated" to proceed'
 
 # PAGES
 
@@ -87,7 +122,7 @@ class RedirectProlific(Page):
 
     
 page_sequence = [
-    #WaitPageResults,
+    Survey,
     PayoffCalculationPage,
     RedirectProlific,
     # EndOfExperiment

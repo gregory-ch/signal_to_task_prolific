@@ -14,6 +14,7 @@ class C(BaseConstants):
     OPTIONS = [1, 2, 3]
     NUM_TRIALS_MAX = 150
     TIMEOUT_SECONDS = 30
+    TEST_MODE = 0  # 0 - production mode, 1 - test mode
     
     # Bonus amounts
     BONUS_HIGH = 0.60
