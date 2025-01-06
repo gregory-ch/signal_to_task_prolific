@@ -14,7 +14,7 @@ class C(BaseConstants):
     PLAYERS_PER_GROUP = None
     NUM_ROUNDS = 7
     DEMO_MODE = False
-    TIMEOUT_SECONDS = 10  # 1.5 минуты
+    TIMEOUT_SECONDS = 90  # 1.5 минуты
     TEST_MODE = 0  # 0 - production mode, 1 - test mode
     
     # Бонусы для разных уровней сложности и временных интервалов
