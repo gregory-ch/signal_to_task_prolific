@@ -37,7 +37,7 @@ class C(BaseConstants):
 
     # Пороги для компьютера
     COMPUTER_THRESHOLD_MIN = 0
-    COMPUTER_THRESHOLD_MAX = 40
+    COMPUTER_THRESHOLD_MAX = 50
 
 
 def creating_session(subsession):
