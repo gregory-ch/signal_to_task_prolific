@@ -21,114 +21,27 @@
 # ]
 
 SESSION_CONFIGS = [
-   
-    # ),
-    # dict(
-    #     name='rockpaperscissors',
-    #     display_name="Rock/Paper/Scissors against Robot",
-    #     app_sequence=['rockpaperscissors'],
-    #     num_demo_participants=1,
-    # ),
-
-    # dict(
-    #     name='data_to_dgp',
-    #     display_name="data to DGP demo",
-    #     app_sequence=['data_to_dgp', ],
-    #     num_demo_participants=1,
-    # ),
-
-    # dict(
-    #     name='data_to_dgp_quiz',
-    #     display_name="data to DGP task quiz",
-    #     app_sequence=['quiz', 'data_to_dgp', 'AOT'],
-    #     num_demo_participants=1,
-    # ),
-
-    # dict(
-    #     name='data_to_dgp_eng',
-    #     display_name="data to DGP ENG",
-    #     app_sequence=['consent', 'quizeng', 'data_to_dgp', "survey_eng"],
-    #     num_demo_participants=2,
-    # ),
-
-    # dict(
-    #     name='AOT',
-    #     display_name="trains with oth",
-    #     app_sequence=['trains',  'MPL', 'bret', 'payment_info'],
-    #     num_demo_participants=1,
-
-    # ),
-
-    
-    # dict(
-    #     name='end_of_experiment',
-    #     display_name="show up fee",
-    #     app_sequence=['end_of_experiment'],
-    #     num_demo_participants=1,
-
-    # ),
-    
-
-    # dict(
-    #     name='data_to_dgp_new_design',
-    #     display_name="data to DGP task new design",
-    #     # app_sequence=['data_to_dgp_new', 'AOT'],
-    #     app_sequence=[#"quiz",
-    #                   "data_to_dgp_new", "survey_eng"],
-    #     num_demo_participants=1,
-    # ),
-    
-     dict(
+    dict(
+        name='prolific_study',
+        display_name="prolific",
+        app_sequence=["consent", "intro", "dsst_from_scratch", "cursor2", "dsst_from_scratch2", 'end'],
+        context="prolific",
+        completionlink="https://app.prolific.com/submissions/complete?cc=C6VY4XH1",
+        test_mode=0,  # 0 - production mode, 1 - test mode
+        num_demo_participants=1,
+    ),
+    dict(
         name='dsst',
         display_name="dsst",
         app_sequence=["dsst_from_scratch"],
         num_demo_participants=1,
     ),
-
-    # dict(
-    #     name='data_to_dgp_new_design_inverse',
-    #     display_name="data to DGP Inverse",
-    #     app_sequence=["quiz_inverse_rus", "data_to_dgp_new", "survey_eng"],
-    #     num_demo_participants=1,
-    # ),
-        dict(
-        name='prolific_study',
-        display_name="prolific",
-        app_sequence=["consent", "intro", "dsst_from_scratch",  "cursor2", "dsst_from_scratch2", 'end'],
-        context="prolific",
-        num_demo_participants=1,
-    ),
-        dict(
+    dict(
         name='cursor2',
         display_name="cursor2",
         app_sequence=["cursor2"],
         num_demo_participants=1,
     ),
-    #   dict(
-    #     name='go_no_go',
-    #     display_name='Attention test (Go/No-Go)',
-    #     app_sequence=['go_no_go'],
-    #     num_demo_participants=1,
-    # ),
-
-    # dict(
-    #     name='any_app', 
-    #     app_sequence=['any_app',], 
-    #     num_demo_participants=1,
-    #     # use_browser_bots=True
-    # ),
-    # dict(
-    #     name='tictactoe',
-    #     display_name="Tic-Tac-Toe",
-    #     app_sequence=['tictactoe'],
-    #     num_demo_participants=2,
-    # ),
-    # dict(
-    #     name='strategy_method',
-    #     display_name="Strategy Method",
-    #     app_sequence=['strategy_method'],
-    #     num_demo_participants=2,
-    # ),
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs

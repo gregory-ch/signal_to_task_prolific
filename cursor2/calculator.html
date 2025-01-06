@@ -162,9 +162,9 @@
 <!-- Calculator interface -->
 <div id="calculator">
     <div class="number-grid">
-        {{ for number in initial_numbers }}
+        {% for number in initial_numbers %}
             <div class="number" data-value="{{ number }}">{{ number }}</div>
-        {{ endfor }}
+        {% endfor %}
     </div>
     <div class="operations">
         <div class="operation" data-op="+">+</div>
@@ -179,13 +179,19 @@
 </div>
 
 <div id="hidden-form-container" style="display: none;">
-    <form id="form" method="post">
+    <form id="form">
         <input type="hidden" name="result" id="id_result">
         <input type="hidden" name="is_correct" id="id_is_correct">
         <input type="hidden" name="all_used" id="id_all_used">
         <input type="hidden" name="solving_time" id="id_solving_time">
         <input type="hidden" name="action_history" id="id_action_history">
-        {{ next_button }}
+        {% if session.config.test_mode == 1 %}
+            {{ next_button }}
+        {% else %}
+            <div id="next-button-container" style="display: none;">
+                {{ next_button }}
+            </div>
+        {% endif %}
     </form>
 </div>
 
