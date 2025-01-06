@@ -19,6 +19,10 @@ class C(BaseConstants):
     # Bonus amounts
     BONUS_HIGH = 0.60
     BONUS_LOW = 0.40
+    
+    # Пороги для компьютера
+    COMPUTER_THRESHOLD_MIN = 0
+    COMPUTER_THRESHOLD_MAX = 50
 
     # Define symbol sets
     BASIC_SYMBOLS = ['circle', 'square', 'triangle']
@@ -291,6 +295,7 @@ class TaskPage(Page):
             else:
                 player.bonus = 0
         
+        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
 
 
 

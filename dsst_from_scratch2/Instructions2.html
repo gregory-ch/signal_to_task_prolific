@@ -50,9 +50,9 @@
             
             <div class="bonus-info mb-4">
                 <h6>For Tasks Marked as "Likely Low Difficulty":</h6>
-                <p>You can earn £{{ bonus_low }} bonus per task if:</p>
+                <p>You can earn £{{ C.BONUS_LOW }} bonus per task if:</p>
                 <ul>
-                    <li>Your total correct matches exceed a random number (0-60) chosen by the computer</li>
+                    <li>Your total correct matches exceed a random number ({{ C.COMPUTER_THRESHOLD_MIN }}-{{ C.COMPUTER_THRESHOLD_MAX }}) chosen by the computer</li>
                     <li>You make fewer than 5 incorrect inputs</li>
                 </ul>
             </div>

@@ -35,6 +35,10 @@ class C(BaseConstants):
         ('false_complex_1', 'false_complex_2', 'false_complex_3')
     ]
 
+    # Пороги для компьютера
+    COMPUTER_THRESHOLD_MIN = 0
+    COMPUTER_THRESHOLD_MAX = 40
+
 
 def creating_session(subsession):
     if subsession.round_number == 1:
@@ -94,7 +98,7 @@ def creating_session(subsession):
         player.symbol_names = str(current_symbols)
         
         # Add computer's random choice
-        player.computer_threshold = random.randint(1, 60)
+        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
 
 
 
@@ -291,6 +295,8 @@ class TaskPage(Page):
             else:
                 player.bonus = 0
         
+        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
+
 
 
 
