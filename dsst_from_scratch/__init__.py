@@ -72,6 +72,10 @@ def creating_session(subsession):
             p.participant.set_types = set_types
             p.participant.swapped_positions = swapped_positions
 
+            # Здесь уже генерируются пороги для каждого раунда
+            for player in p.in_all_rounds():
+                player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
+
     # Set up each player's round
     for player in subsession.get_players():
         current_symbols = player.participant.symbol_sets[player.round_number - 1]
@@ -281,21 +285,21 @@ class TaskPage(Page):
 
     @staticmethod
     def before_next_page(player: Player, timeout_happened):
+        # Вычисляем эффективный счет и проверяем условия для бонуса
+        effective_score = player.total_trials_completed - player.total_wrong_attempts
+        
         if player.total_wrong_attempts >= 5:
             player.bonus = 0
         else:
-            effective_score = player.total_trials_completed - player.total_wrong_attempts
-            if effective_score > player.computer_threshold:
-                if player.set_type == 'complex':
+            if effective_score > player.computer_threshold:  # используем существующий порог
+                if player.set_type in ['complex', 'high']:
                     player.bonus = C.BONUS_HIGH
-                elif player.set_type == 'simple':
+                elif player.set_type in ['simple', 'low']:
                     player.bonus = C.BONUS_LOW
                 else:  # training round
                     player.bonus = 0
             else:
                 player.bonus = 0
-        
-        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
 
 
 

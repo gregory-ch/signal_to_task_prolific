@@ -98,7 +98,7 @@ def creating_session(subsession):
         player.symbol_names = str(current_symbols)
         
         # Add computer's random choice
-        player.computer_threshold = random.randint(1, 60)
+        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
 
 
 
@@ -286,16 +286,14 @@ class TaskPage(Page):
         else:
             effective_score = player.total_trials_completed - player.total_wrong_attempts
             if effective_score > player.computer_threshold:
-                if player.set_type == 'complex':
+                if player.set_type in ['complex', 'high']:
                     player.bonus = C.BONUS_HIGH
-                elif player.set_type == 'simple':
+                elif player.set_type in ['simple', 'low']:
                     player.bonus = C.BONUS_LOW
                 else:  # training round
                     player.bonus = 0
             else:
                 player.bonus = 0
-        
-        player.computer_threshold = random.randint(C.COMPUTER_THRESHOLD_MIN, C.COMPUTER_THRESHOLD_MAX)
 
 
 
