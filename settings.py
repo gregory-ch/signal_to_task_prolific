@@ -58,9 +58,8 @@ LANGUAGE_CODE = 'en'
 # LANGUAGE_CODE = 'ru'  # "," occures....
 
 # e.g. EUR, GBP, CNY, JPY
-# REAL_WORLD_CURRENCY_CODE = 'RUR'
-REAL_WORLD_CURRENCY_CODE = 'EUR'
-USE_POINTS = True
+REAL_WORLD_CURRENCY_CODE = 'GBP'
+USE_POINTS = False
 
 ADMIN_USERNAME = 'admin'
 # for security, best to set admin password in an environment variable
