@@ -316,6 +316,7 @@ class Results(Page):
         all_rounds = player.in_all_rounds()
         rounds_data = []
         total_bonus = sum(round.bonus for round in all_rounds if round.task_source != 'training')
+        player.payoff = Currency(total_bonus)
         
         for round in all_rounds:
             if round.task_source != 'training':
