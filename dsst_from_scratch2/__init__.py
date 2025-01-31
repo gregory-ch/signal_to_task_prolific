@@ -335,6 +335,7 @@ class Results(Page):
         all_rounds = player.in_all_rounds()
         total_bonus = sum(round.bonus for round in all_rounds if round.set_type != 'training')
         player.total_bonus = total_bonus
+        player.payoff = Currency(total_bonus)
 
 
 page_sequence = [Instructions, Instructions2, ReadyPage, TaskPage, Results]

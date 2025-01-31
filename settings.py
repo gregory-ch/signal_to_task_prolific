@@ -26,7 +26,7 @@ SESSION_CONFIGS = [
         display_name="prolific",
         app_sequence=["consent", "intro", "dsst_from_scratch", "cursor2", "dsst_from_scratch2", 'end'],
         context="prolific",
-        completionlink="https://app.prolific.com/submissions/complete?cc=C6VY4XH1",
+        completionlink="https://app.prolific.com/submissions/complete?cc=C1KDOT5M",
         test_mode=0,  # 0 - production mode, 1 - test mode
         num_demo_participants=1,
     ),
